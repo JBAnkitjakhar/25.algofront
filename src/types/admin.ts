@@ -109,13 +109,24 @@ export interface GlobalProgressStats {
 export interface UserListItem {
   id: string;
   name: string;
-  email: string;
+  email?: string; // CHANGED: Email is now optional (can be undefined for GitHub private email users)
   image?: string;
+  githubUsername?: string; // NEW: For displaying GitHub username
   role: UserRole;
   createdAt: string; // ISO string from LocalDateTime
   updatedAt: string; // ISO string from LocalDateTime
   primarySuperAdmin: boolean; // matches backend field name
 }
+
+// Helper function to get display identifier for UserListItem
+export const getUserListDisplayIdentifier = (user: UserListItem): string => {
+  if (user.email) {
+    return user.email;
+  } else if (user.githubUsername) {
+    return `@${user.githubUsername}`;
+  }
+  return user.name || 'User';
+};
 
 export interface RoleChangeRequest {
   userId: string;
