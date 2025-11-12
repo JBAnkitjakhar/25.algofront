@@ -1,0 +1,279 @@
+/* src/components/admin/styles/CourseEditorHighlighting.css */
+
+/* Code block container in the editor */
+.ProseMirror pre {
+  background: #2b2d3a !important; /* Lighter dark background like in your image */
+  color: #d4d4d4 !important;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'Courier New', monospace;
+  font-size: 14px;
+  line-height: 1.6;
+  padding: 16px !important;
+  border-radius: 8px !important;
+  overflow-x: auto;
+  margin: 16px 0;
+  border: 1px solid #3e4451;
+}
+
+.ProseMirror pre code {
+  background: none !important;
+  color: inherit;
+  font-size: inherit;
+  padding: 0;
+}
+
+/* Inline code */
+.ProseMirror code {
+  background-color: #e0dada;
+  color: #07091f;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 0.9em;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', monospace;
+}
+
+/* CENTER IMAGES - Images should be centered and on their own line */
+.ProseMirror img {
+  display: block !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  margin-top: 16px !important;
+  margin-bottom: 16px !important;
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Syntax highlighting tokens - matching VS Code dark theme */
+.hljs-comment,
+.hljs-quote {
+  color: #7f848e;
+  font-style: italic;
+}
+
+.hljs-variable,
+.hljs-template-variable,
+.hljs-tag,
+.hljs-name,
+.hljs-selector-id,
+.hljs-selector-class,
+.hljs-regexp,
+.hljs-deletion {
+  color: #e06c75;
+}
+
+.hljs-number,
+.hljs-built_in,
+.hljs-builtin-name,
+.hljs-literal,
+.hljs-type,
+.hljs-params,
+.hljs-meta,
+.hljs-link {
+  color: #d19a66;
+}
+
+.hljs-attribute {
+  color: #e5c07b;
+}
+
+.hljs-string,
+.hljs-symbol,
+.hljs-bullet,
+.hljs-addition {
+  color: #98c379;
+}
+
+.hljs-title,
+.hljs-section {
+  color: #61afef;
+}
+
+.hljs-keyword,
+.hljs-selector-tag {
+  color: #c678dd;
+}
+
+/* Language-specific tokens */
+/* Java */
+.language-java .hljs-keyword {
+  color: #c678dd;
+}
+
+.language-java .hljs-type,
+.language-java .hljs-class {
+  color: #e5c07b;
+}
+
+.language-java .hljs-function {
+  color: #61afef;
+}
+
+.language-java .hljs-number {
+  color: #d19a66;
+}
+
+.language-java .hljs-string {
+  color: #98c379;
+}
+
+.language-java .hljs-comment {
+  color: #7f848e;
+  font-style: italic;
+}
+
+/* JavaScript/TypeScript */
+.language-javascript .hljs-keyword,
+.language-typescript .hljs-keyword {
+  color: #c678dd;
+}
+
+.language-javascript .hljs-built_in,
+.language-typescript .hljs-built_in {
+  color: #e5c07b;
+}
+
+.language-javascript .hljs-string,
+.language-typescript .hljs-string {
+  color: #98c379;
+}
+
+/* Python */
+.language-python .hljs-keyword {
+  color: #c678dd;
+}
+
+.language-python .hljs-built_in {
+  color: #e5c07b;
+}
+
+.language-python .hljs-string {
+  color: #98c379;
+}
+
+.language-python .hljs-decorator {
+  color: #e06c75;
+}
+
+.language-python .hljs-function {
+  color: #61afef;
+}
+
+/* C/C++ */
+.language-cpp .hljs-keyword,
+.language-c .hljs-keyword {
+  color: #c678dd;
+}
+
+.language-cpp .hljs-built_in,
+.language-c .hljs-built_in {
+  color: #e5c07b;
+}
+
+/* SQL */
+.language-sql .hljs-keyword {
+  color: #c678dd;
+  text-transform: uppercase;
+}
+
+.language-sql .hljs-built_in {
+  color: #e5c07b;
+}
+
+/* HTML/XML */
+.language-html .hljs-tag,
+.language-xml .hljs-tag {
+  color: #e06c75;
+}
+
+.language-html .hljs-attr,
+.language-xml .hljs-attr {
+  color: #e5c07b;
+}
+
+.language-html .hljs-string,
+.language-xml .hljs-string {
+  color: #98c379;
+}
+
+/* CSS */
+.language-css .hljs-selector {
+  color: #e06c75;
+}
+
+.language-css .hljs-attribute {
+  color: #61afef;
+}
+
+.language-css .hljs-number {
+  color: #d19a66;
+}
+
+.language-css .hljs-string {
+  color: #98c379;
+}
+
+/* Additional editor-specific styles */
+.ProseMirror pre.hljs {
+  background: #2b2d3a !important; /* Ensure consistent background */
+}
+
+/* Code block with line numbers (optional) */
+.ProseMirror .code-block-with-line-numbers {
+  position: relative;
+  padding-left: 3.5em !important;
+}
+
+.ProseMirror .code-block-with-line-numbers::before {
+  content: counter(line);
+  counter-increment: line;
+  position: absolute;
+  left: 0;
+  width: 3em;
+  text-align: right;
+  padding-right: 0.5em;
+  color: #636d83;
+  user-select: none;
+}
+
+/* Scrollbar styling for code blocks */
+.ProseMirror pre::-webkit-scrollbar {
+  height: 8px;
+  width: 8px;
+}
+
+.ProseMirror pre::-webkit-scrollbar-track {
+  background: #1e1e2e;
+  border-radius: 4px;
+}
+
+.ProseMirror pre::-webkit-scrollbar-thumb {
+  background: #4a5568;
+  border-radius: 4px;
+}
+
+.ProseMirror pre::-webkit-scrollbar-thumb:hover {
+  background: #5a6578;
+}
+
+/* Focus styles */
+.ProseMirror pre:focus {
+  outline: 2px solid #4a5568;
+  outline-offset: 2px;
+}
+
+/* Selection in code blocks */
+.ProseMirror pre::selection,
+.ProseMirror pre *::selection {
+  background-color: rgba(61, 130, 219, 0.3);
+}
+
+/* Placeholder for empty code blocks */
+.ProseMirror pre.is-empty::before {
+  content: "// Write your code here...";
+  color: #636d83;
+  font-style: italic;
+  pointer-events: none;
+  height: 0;
+  float: left;
+}

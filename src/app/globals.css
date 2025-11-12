@@ -1,0 +1,124 @@
+/* src/app/globals.css */
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* ===================================
+   CUSTOM SCROLLBAR STYLES
+   =================================== */
+
+/* Base custom scrollbar for all components */
+.custom-scrollbar {
+  scrollbar-width: none; /* Firefox - hide by default */
+  scrollbar-color: transparent transparent;
+  transition: scrollbar-color 0.3s ease;
+}
+
+.custom-scrollbar:hover {
+  scrollbar-width: thin; /* Firefox - show on hover */
+  scrollbar-color: rgba(0, 0, 0, 0.3) transparent;
+}
+
+/* WebKit scrollbars - hidden by default */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 0px;
+  height: 0px;
+  background: transparent;
+  transition: width 0.3s ease, height 0.3s ease;
+}
+
+.custom-scrollbar:hover::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 2px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 2px;
+  opacity: 0;
+  transition: opacity 0.3s ease, background 0.3s ease;
+}
+
+.custom-scrollbar:hover::-webkit-scrollbar-thumb {
+  opacity: 1;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.custom-scrollbar::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Dark mode scrollbar */
+.dark .custom-scrollbar:hover {
+  scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.4);
+}
+
+/* ===================================
+   IFRAME SCROLLBAR STYLES
+   =================================== */
+
+/* Enhanced iframe scrollbar styling for visualizers */
+.visualizer-iframe {
+  scrollbar-width: none;
+  scrollbar-color: transparent transparent;
+}
+
+.visualizer-iframe::-webkit-scrollbar {
+  width: 0px;
+  height: 0px;
+  background: transparent;
+}
+
+/* Show iframe scrollbars only when parent container is hovered */
+.iframe-container:hover .visualizer-iframe {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+}
+
+.iframe-container:hover .visualizer-iframe::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+.iframe-container:hover .visualizer-iframe::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.iframe-container:hover .visualizer-iframe::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 2px;
+}
+
+.iframe-container:hover .visualizer-iframe::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.4);
+}
+
+/* Dark mode for iframe */
+.dark .iframe-container:hover .visualizer-iframe {
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+
+.dark .iframe-container:hover .visualizer-iframe::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.dark .iframe-container:hover .visualizer-iframe::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.4);
+}
