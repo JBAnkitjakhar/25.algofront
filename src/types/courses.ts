@@ -18,7 +18,7 @@ export interface Document {
   title: string;
   topicId: string;
   topicName: string;
-  content: string | null; // null when fetching list, full HTML when fetching single doc
+  content: string | null; 
   imageUrls: string[];
   displayOrder: number;
   totalSize: number;
