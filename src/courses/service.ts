@@ -18,6 +18,7 @@ import type {
 import { COURSES_ENDPOINTS } from './constants';
 
 class CoursesService {
+  //create topic
   async createTopic(data: CreateTopicRequest): Promise<ApiResponse<Topic>> {
     const response = await apiClient.post<{ data: Topic; success: boolean; message: string }>(
       COURSES_ENDPOINTS.CREATE_TOPIC, 
@@ -35,6 +36,7 @@ class CoursesService {
     };
   }
 
+  //update topic
   async updateTopic(topicId: string, data: UpdateTopicRequest): Promise<ApiResponse<Topic>> {
     const response = await apiClient.put<{ data: Topic; success: boolean; message: string }>(
       COURSES_ENDPOINTS.UPDATE_TOPIC(topicId),
@@ -52,6 +54,7 @@ class CoursesService {
     };
   }
 
+  //toggle visibility
   async toggleTopicVisibility(topicId: string): Promise<ApiResponse<Topic>> {
     const response = await apiClient.request<{ data: Topic; success: boolean; message: string }>({
       method: 'PATCH',
@@ -69,16 +72,19 @@ class CoursesService {
     };
   }
 
+  //delete topic
   async deleteTopic(topicId: string): Promise<ApiResponse<{ success: boolean; message: string }>> {
     return await apiClient.delete<{ success: boolean; message: string }>(
       COURSES_ENDPOINTS.DELETE_TOPIC(topicId)
     );
   }
 
+  // all topics for admin
   async getAllTopicsAdmin(): Promise<ApiResponse<TopicsListResponse>> {
     return await apiClient.get<TopicsListResponse>(COURSES_ENDPOINTS.ALL_TOPICS_ADMIN);
   }
 
+  //create doc
   async createDocument(data: CreateDocumentRequest): Promise<ApiResponse<Document>> {
     const response = await apiClient.post<{ data: Document; success: boolean; message: string }>(
       COURSES_ENDPOINTS.CREATE_DOC,
@@ -96,6 +102,7 @@ class CoursesService {
     };
   }
 
+  //update doc
   async updateDocument(docId: string, data: UpdateDocumentRequest): Promise<ApiResponse<Document>> {
     const response = await apiClient.put<{ data: Document; success: boolean; message: string }>(
       COURSES_ENDPOINTS.UPDATE_DOC(docId),
@@ -113,12 +120,14 @@ class CoursesService {
     };
   }
 
+  //delete doc
   async deleteDocument(docId: string): Promise<ApiResponse<{ success: boolean; message: string }>> {
     return await apiClient.delete<{ success: boolean; message: string }>(
       COURSES_ENDPOINTS.DELETE_DOC(docId)
     );
   }
 
+  //upload image
   async uploadImage(file: File): Promise<ApiResponse<CourseImageUploadResponse>> {
     const formData = new FormData();
     formData.append('image', file);
@@ -140,6 +149,7 @@ class CoursesService {
     };
   }
 
+  //delete image
   async deleteImage(imageUrl: string): Promise<ApiResponse<{ result: string }>> {
     const response = await apiClient.delete<{ success: boolean; data: { result: string }; message: string }>(
       `${COURSES_ENDPOINTS.DELETE_IMAGE}?imageUrl=${encodeURIComponent(imageUrl)}`
@@ -156,6 +166,7 @@ class CoursesService {
     };
   }
 
+  //get image config
   async getImageConfig(): Promise<ApiResponse<CourseImageConfig>> {
     const response = await apiClient.get<{ success: boolean; data: CourseImageConfig }>(
       COURSES_ENDPOINTS.IMAGE_CONFIG
@@ -172,6 +183,7 @@ class CoursesService {
     };
   }
 
+  //get public topics
   async getPublicTopics(): Promise<ApiResponse<TopicsListResponse>> {
     return await apiClient.get<TopicsListResponse>(COURSES_ENDPOINTS.PUBLIC_TOPICS);
   }
@@ -192,12 +204,14 @@ class CoursesService {
     };
   }
 
+  //get docs by topic
   async getDocsByTopic(topicId: string): Promise<ApiResponse<DocsByTopicResponse>> {
     return await apiClient.get<DocsByTopicResponse>(
       COURSES_ENDPOINTS.GET_DOCS_BY_TOPIC(topicId)
     );
   }
 
+  //get doc by id
   async getDocumentById(docId: string): Promise<ApiResponse<Document>> {
     const response = await apiClient.get<{ data: Document; success: boolean }>(
       COURSES_ENDPOINTS.GET_DOC(docId)
@@ -214,6 +228,7 @@ class CoursesService {
     };
   }
 
+  //get course stats
   async getCourseStats(): Promise<ApiResponse<CourseStats>> {
     const response = await apiClient.get<{ data: CourseStats; success: boolean }>(
       COURSES_ENDPOINTS.STATS

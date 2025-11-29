@@ -24,7 +24,6 @@ import {
 } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 import type { Topic, CreateTopicRequest } from '@/courses';
-import { dateUtils } from '@/lib/utils/common';
 import Image from 'next/image';
 import { Loader2Icon } from 'lucide-react';
 
@@ -332,16 +331,14 @@ export default function AdminCoursesPage() {
                           {topic.description}
                         </div>
                         <div className="mt-1 flex items-center space-x-4 text-xs text-gray-500">
-                          <span>{topic.docsCount} documents</span>
                           <span>Order: {topic.displayOrder}</span>
-                          <span>Created: {dateUtils.formatDate(topic.createdAt)}</span>
                         </div>
                       </div>
                     </div>
                     
                     <div className="flex items-center space-x-2">
                       <Link
-                        href={`/admin/courses/${topic.id}`}
+                        href={`/admin/courses/${topic.id}/docs`}
                         className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                       >
                         View Docs

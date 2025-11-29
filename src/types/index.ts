@@ -16,7 +16,7 @@ export type {
   RoleChangeRequest,
   Category,
   CategoryStats,
-  CategoryWithProgress, // NEW: Optimized category type with embedded progress
+  CategoryWithProgress,  
   CreateCategoryRequest,
   UpdateCategoryRequest,
   DeleteCategoryResponse,

@@ -18,7 +18,7 @@ export function useAdminTopics() {
       }
       throw new Error(response.message || 'Failed to fetch topics');
     },
-    staleTime: 2 * 60 * 1000,
+    staleTime: 2 * 60 * 1000, // 2 min
   });
 }
 
