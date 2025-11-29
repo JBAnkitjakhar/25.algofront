@@ -4,7 +4,6 @@
 
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useDocumentsByTopic } from '@/hooks/useCoursesManagement';
 import {
   DocumentTextIcon,
   ArrowLeftIcon,
@@ -16,6 +15,7 @@ import UserLayout from '@/components/layout/UserLayout';
 import { dateUtils } from '@/lib/utils/common';
 import Image from 'next/image';
 import { Loader2Icon } from 'lucide-react';
+import { useDocumentsByTopic } from '@/courses';
 
 function TopicContent() {
   const params = useParams();

@@ -1,4 +1,4 @@
-// src/types/courses.ts
+// src/courses/types.ts
 
 export interface Topic {
   id: string;
@@ -6,18 +6,19 @@ export interface Topic {
   description: string;
   displayOrder: number;
   iconUrl?: string | null;
+  isPublic: boolean;
   docsCount: number;
   createdByName: string;
   createdById: string;
   createdAt: string;
   updatedAt: string;
+  version: number;
 }
 
 export interface Document {
   id: string;
   title: string;
   topicId: string;
-  topicName: string;
   content: string | null; 
   imageUrls: string[];
   displayOrder: number;
@@ -26,22 +27,27 @@ export interface Document {
   createdById: string;
   createdAt: string;
   updatedAt: string;
+  version: number;
 }
 
+// TOPIC REQUEST TYPES - ADD THESE
 export interface CreateTopicRequest {
   name: string;
-  description: string;
+  description?: string;
   displayOrder: number;
   iconUrl?: string;
+  isPublic: boolean;
 }
 
 export interface UpdateTopicRequest {
-  name: string;
-  description: string;
-  displayOrder: number;
+  name?: string;
+  description?: string;
+  displayOrder?: number;
   iconUrl?: string;
+  isPublic?: boolean;
 }
 
+// DOCUMENT REQUEST TYPES
 export interface CreateDocumentRequest {
   title: string;
   topicId: string;
@@ -51,6 +57,15 @@ export interface CreateDocumentRequest {
 }
 
 export interface UpdateDocumentRequest {
+  title?: string;
+  topicId?: string;
+  displayOrder?: number;
+  content?: string;
+  imageUrls?: string[];
+}
+
+// FORM STATE TYPE (always has required fields)
+export interface DocumentFormData {
   title: string;
   topicId: string;
   displayOrder: number;
@@ -58,6 +73,7 @@ export interface UpdateDocumentRequest {
   imageUrls: string[];
 }
 
+// RESPONSE TYPES
 export interface CourseImageUploadResponse {
   size: number;
   secure_url: string;
@@ -80,4 +96,17 @@ export interface CourseImageConfig {
 export interface CourseStats {
   totalTopics: number;
   totalDocuments: number;
+}
+
+export interface TopicsListResponse {
+  data: Topic[];
+  success: boolean;
+  count: number;
+}
+
+export interface DocsByTopicResponse {
+  docs: Document[];
+  success: boolean;
+  count: number;
+  topic: Topic;
 }

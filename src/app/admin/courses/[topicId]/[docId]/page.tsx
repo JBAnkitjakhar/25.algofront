@@ -1,29 +1,26 @@
 // src/app/admin/courses/[topicId]/[docId]/page.tsx
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import { Editor } from '@tiptap/react';
-import { 
+import { useState, useEffect } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { Editor } from "@tiptap/react";
+import {
   useDocument,
   useTopic,
   useCreateDocument,
   useUpdateDocument,
   useDeleteCourseImage,
-  useUploadCourseImage
-} from '@/hooks/useCoursesManagement';
-import CourseEditor from '@/components/admin/CourseEditor';
+  useUploadCourseImage,
+} from "@/courses/hooks";
+import CourseEditor from "@/components/admin/CourseEditor";
+import { ArrowLeftIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import toast from "react-hot-toast";
+// import { CreateDocumentRequest, UpdateDocumentRequest } from '@/courses/types';
+import Image from "next/image";
 import {
-  ArrowLeftIcon,
-  XMarkIcon,
-} from '@heroicons/react/24/outline';
-import toast from 'react-hot-toast';
-import { CreateDocumentRequest, UpdateDocumentRequest } from '@/types/courses';
-import Image from 'next/image';
-import { 
-  Loader2Icon, 
-  SaveIcon, 
-  AlertTriangleIcon, 
+  Loader2Icon,
+  SaveIcon,
+  AlertTriangleIcon,
   HelpCircleIcon,
   Bold,
   Italic,
@@ -33,42 +30,63 @@ import {
   ImageIcon,
   Highlighter,
   Palette,
-  Terminal
-} from 'lucide-react';
+  Terminal,
+} from "lucide-react";
+import type { CreateDocumentRequest, UpdateDocumentRequest, DocumentFormData } from '@/courses';
 
 // Color palettes
 const COLORS = [
-  '#000000', '#FF0000', '#00FF00', '#0000FF', '#FFFF00',
-  '#FF00FF', '#00FFFF', '#FFA500', '#800080', '#FFC0CB',
-  '#808080', '#8B4513', '#000080', '#008000', '#FF6347'
+  "#000000",
+  "#FF0000",
+  "#00FF00",
+  "#0000FF",
+  "#FFFF00",
+  "#FF00FF",
+  "#00FFFF",
+  "#FFA500",
+  "#800080",
+  "#FFC0CB",
+  "#808080",
+  "#8B4513",
+  "#000080",
+  "#008000",
+  "#FF6347",
 ];
 
 const HIGHLIGHT_COLORS = [
-  '#FFEB3B', '#FFC107', '#FF9800', '#FF5722', '#4CAF50',
-  '#00BCD4', '#03A9F4', '#2196F3', '#9C27B0', '#E91E63'
+  "#FFEB3B",
+  "#FFC107",
+  "#FF9800",
+  "#FF5722",
+  "#4CAF50",
+  "#00BCD4",
+  "#03A9F4",
+  "#2196F3",
+  "#9C27B0",
+  "#E91E63",
 ];
 
 const CODE_LANGUAGES = [
-  { value: 'javascript', label: 'JavaScript' },
-  { value: 'typescript', label: 'TypeScript' },
-  { value: 'python', label: 'Python' },
-  { value: 'java', label: 'Java' },
-  { value: 'cpp', label: 'C++' },
-  { value: 'c', label: 'C' },
-  { value: 'csharp', label: 'C#' },
-  { value: 'php', label: 'PHP' },
-  { value: 'ruby', label: 'Ruby' },
-  { value: 'go', label: 'Go' },
-  { value: 'rust', label: 'Rust' },
-  { value: 'kotlin', label: 'Kotlin' },
-  { value: 'swift', label: 'Swift' },
-  { value: 'sql', label: 'SQL' },
-  { value: 'html', label: 'HTML' },
-  { value: 'css', label: 'CSS' },
-  { value: 'json', label: 'JSON' },
-  { value: 'bash', label: 'Bash/Shell' },
-  { value: 'yaml', label: 'YAML' },
-  { value: 'markdown', label: 'Markdown' },
+  { value: "javascript", label: "JavaScript" },
+  { value: "typescript", label: "TypeScript" },
+  { value: "python", label: "Python" },
+  { value: "java", label: "Java" },
+  { value: "cpp", label: "C++" },
+  { value: "c", label: "C" },
+  { value: "csharp", label: "C#" },
+  { value: "php", label: "PHP" },
+  { value: "ruby", label: "Ruby" },
+  { value: "go", label: "Go" },
+  { value: "rust", label: "Rust" },
+  { value: "kotlin", label: "Kotlin" },
+  { value: "swift", label: "Swift" },
+  { value: "sql", label: "SQL" },
+  { value: "html", label: "HTML" },
+  { value: "css", label: "CSS" },
+  { value: "json", label: "JSON" },
+  { value: "bash", label: "Bash/Shell" },
+  { value: "yaml", label: "YAML" },
+  { value: "markdown", label: "Markdown" },
 ];
 
 export default function AdminDocumentEditPage() {
@@ -76,34 +94,38 @@ export default function AdminDocumentEditPage() {
   const router = useRouter();
   const topicId = params.topicId as string;
   const docId = params.docId as string;
-  const isNew = docId === 'new';
-  
+  const isNew = docId === "new";
+
   const { data: topic } = useTopic(topicId);
-  const { data: documentData, isLoading: isLoadingDoc } = useDocument(isNew ? '' : docId);
+  const { data: documentData, isLoading: isLoadingDoc } = useDocument(
+    isNew ? "" : docId
+  );
   const createDocumentMutation = useCreateDocument();
   const updateDocumentMutation = useUpdateDocument();
   const deleteImageMutation = useDeleteCourseImage();
   const uploadImageMutation = useUploadCourseImage();
-  
-  const [formData, setFormData] = useState<CreateDocumentRequest | UpdateDocumentRequest>({
-    title: '',
+
+  const [formData, setFormData] = useState<DocumentFormData>({
+    title: "",
     topicId: topicId,
     displayOrder: 1,
-    content: '',
-    imageUrls: []
+    content: "",
+    imageUrls: [],
   });
-  
+
   const [isSaving, setIsSaving] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
   const [documentSize, setDocumentSize] = useState(0);
   const [editorInstance, setEditorInstance] = useState<Editor | null>(null);
-  const [selectedTextColor, setSelectedTextColor] = useState('#000000');
-  const [selectedHighlightColor, setSelectedHighlightColor] = useState('#FFEB3B');
-  const [selectedLanguage, setSelectedLanguage] = useState('javascript');
+  const [selectedTextColor, setSelectedTextColor] = useState("#000000");
+  const [selectedHighlightColor, setSelectedHighlightColor] =
+    useState("#FFEB3B");
+  const [selectedLanguage, setSelectedLanguage] = useState("javascript");
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
   const [showTextColorPicker, setShowTextColorPicker] = useState(false);
-  const [showHighlightColorPicker, setShowHighlightColorPicker] = useState(false);
+  const [showHighlightColorPicker, setShowHighlightColorPicker] =
+    useState(false);
 
   // Calculate document size in real-time
   useEffect(() => {
@@ -119,11 +141,11 @@ export default function AdminDocumentEditPage() {
   useEffect(() => {
     if (formData.content) {
       const parser = new window.DOMParser();
-      const doc = parser.parseFromString(formData.content, 'text/html');
-      const images = doc.querySelectorAll('img');
-      const imageUrls = Array.from(images).map(img => img.src).filter(src => 
-        src.startsWith('https://res.cloudinary.com')
-      );
+      const doc = parser.parseFromString(formData.content, "text/html");
+      const images = doc.querySelectorAll("img");
+      const imageUrls = Array.from(images)
+        .map((img) => img.src)
+        .filter((src) => src.startsWith("https://res.cloudinary.com"));
       setUploadedImages(imageUrls);
     } else {
       setUploadedImages([]);
@@ -134,18 +156,18 @@ export default function AdminDocumentEditPage() {
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
-      
+
       // Check if click is outside color picker elements
-      if (!target.closest('.color-picker-container')) {
+      if (!target.closest(".color-picker-container")) {
         setShowTextColorPicker(false);
         setShowHighlightColorPicker(false);
       }
     };
 
     if (showTextColorPicker || showHighlightColorPicker) {
-      window.document.addEventListener('mousedown', handleClickOutside);
+      window.document.addEventListener("mousedown", handleClickOutside);
       return () => {
-        window.document.removeEventListener('mousedown', handleClickOutside);
+        window.document.removeEventListener("mousedown", handleClickOutside);
       };
     }
   }, [showTextColorPicker, showHighlightColorPicker]);
@@ -154,11 +176,11 @@ export default function AdminDocumentEditPage() {
   useEffect(() => {
     if (isNew && !isInitialized) {
       setFormData({
-        title: '',
+        title: "",
         topicId: topicId,
         displayOrder: 1,
-        content: '',
-        imageUrls: []
+        content: "",
+        imageUrls: [],
       });
       setIsInitialized(true);
     } else if (documentData && !isInitialized) {
@@ -167,113 +189,121 @@ export default function AdminDocumentEditPage() {
           title: documentData.title,
           topicId: documentData.topicId,
           displayOrder: documentData.displayOrder || 1,
-          content: documentData.content || '',
-          imageUrls: documentData.imageUrls || []
+          content: documentData.content || "",
+          imageUrls: documentData.imageUrls || [],
         });
         setIsInitialized(true);
       }, 50);
-      
+
       return () => clearTimeout(timer);
     }
   }, [documentData, isNew, topicId, isInitialized]);
 
   const handleSave = async () => {
     if (!formData.title.trim()) {
-      toast.error('Document title is required');
+      toast.error("Document title is required");
       return;
     }
-    
+
     if (!formData.content.trim()) {
-      toast.error('Document content is required');
+      toast.error("Document content is required");
       return;
     }
 
     // Block save if size exceeds 5MB
     if (documentSize > 5 * 1024 * 1024) {
-      toast.error('Document size exceeds 5MB limit. Please reduce content size.');
+      toast.error(
+        "Document size exceeds 5MB limit. Please reduce content size."
+      );
       return;
     }
 
     setIsSaving(true);
-    
+
     try {
       const parser = new window.DOMParser();
-      const doc = parser.parseFromString(formData.content, 'text/html');
-      const images = doc.querySelectorAll('img');
-      const imageUrls = Array.from(images).map(img => img.src).filter(src => 
-        src.startsWith('https://res.cloudinary.com')
-      );
-      
+      const doc = parser.parseFromString(formData.content, "text/html");
+      const images = doc.querySelectorAll("img");
+      const imageUrls = Array.from(images)
+        .map((img) => img.src)
+        .filter((src) => src.startsWith("https://res.cloudinary.com"));
+
       const dataToSave = {
         ...formData,
-        imageUrls
+        imageUrls,
       };
 
       if (isNew) {
-        await createDocumentMutation.mutateAsync(dataToSave as CreateDocumentRequest);
-        toast.success('Document created successfully');
+        await createDocumentMutation.mutateAsync(
+          dataToSave as CreateDocumentRequest
+        );
+        toast.success("Document created successfully");
         router.push(`/admin/courses/${topicId}`);
       } else {
-        await updateDocumentMutation.mutateAsync({ 
-          docId, 
-          data: dataToSave as UpdateDocumentRequest 
+        await updateDocumentMutation.mutateAsync({
+          docId,
+          data: dataToSave as UpdateDocumentRequest,
         });
-        toast.success('Document updated successfully');
+        toast.success("Document updated successfully");
       }
     } catch (error) {
-      console.error('Failed to save document:', error);
-      toast.error('Failed to save document');
+      console.error("Failed to save document:", error);
+      toast.error("Failed to save document");
     } finally {
       setIsSaving(false);
     }
   };
 
   const handleRemoveImage = async (imageUrl: string) => {
-    if (window.confirm('Remove this image from the document?')) {
+    if (window.confirm("Remove this image from the document?")) {
       const newContent = formData.content.replace(
-        new RegExp(`<img[^>]*src="${imageUrl}"[^>]*>`, 'g'),
-        ''
+        new RegExp(`<img[^>]*src="${imageUrl}"[^>]*>`, "g"),
+        ""
       );
       setFormData({ ...formData, content: newContent });
-      
+
       try {
         await deleteImageMutation.mutateAsync(imageUrl);
-        toast.success('Image removed');
+        toast.success("Image removed");
       } catch (error) {
-        console.error('Failed to delete image:', error);
+        console.error("Failed to delete image:", error);
       }
     }
   };
 
   const handleImageUpload = () => {
-    const input = window.document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*';
-    
+    const input = window.document.createElement("input");
+    input.type = "file";
+    input.accept = "image/*";
+
     input.onchange = async (e: Event) => {
       const target = e.target as HTMLInputElement;
       const file = target.files?.[0];
       if (!file) return;
 
       if (file.size > 2 * 1024 * 1024) {
-        toast.error('Image size must be less than 2MB');
+        toast.error("Image size must be less than 2MB");
         return;
       }
 
       setIsUploadingImage(true);
-      
+
       try {
         // Upload image to Cloudinary via mutation
         const result = await uploadImageMutation.mutateAsync(file);
-        
+
         if (result && editorInstance) {
           // Insert image at current cursor position in editor
-          editorInstance.chain().focus().setImage({ src: result.secure_url }).run();
-          toast.success('Image inserted successfully');
+          editorInstance
+            .chain()
+            .focus()
+            .setImage({ src: result.secure_url })
+            .run();
+          toast.success("Image inserted successfully");
         }
       } catch (error) {
-        console.error('Failed to upload image:', error);
-        toast.error('Failed to upload image');
+        console.error("Failed to upload image:", error);
+        toast.error("Failed to upload image");
       } finally {
         setIsUploadingImage(false);
       }
@@ -284,13 +314,17 @@ export default function AdminDocumentEditPage() {
 
   const insertCodeBlock = () => {
     if (editorInstance) {
-      editorInstance.chain().focus().setCodeBlock({ language: selectedLanguage }).run();
+      editorInstance
+        .chain()
+        .focus()
+        .setCodeBlock({ language: selectedLanguage })
+        .run();
     }
   };
 
   // Format size for display
   const formatSize = (bytes: number): string => {
-    if (bytes === 0) return '0 KB';
+    if (bytes === 0) return "0 KB";
     if (bytes < 1024) return `${bytes} B`;
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
     return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
@@ -327,12 +361,10 @@ export default function AdminDocumentEditPage() {
           {/* Document Info */}
           <div className="pb-4 border-b border-gray-300">
             <h2 className="text-lg font-bold text-gray-900">
-              {isNew ? 'Create Document' : 'Edit Document'}
+              {isNew ? "Create Document" : "Edit Document"}
             </h2>
             {topic && (
-              <p className="text-sm text-gray-600 mt-1">
-                Topic: {topic.name}
-              </p>
+              <p className="text-sm text-gray-600 mt-1">Topic: {topic.name}</p>
             )}
           </div>
 
@@ -345,9 +377,13 @@ export default function AdminDocumentEditPage() {
               </p>
               <div className="flex flex-col gap-1">
                 <button
-                  onClick={() => editorInstance?.chain().focus().toggleBold().run()}
+                  onClick={() =>
+                    editorInstance?.chain().focus().toggleBold().run()
+                  }
                   className={`flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-colors ${
-                    editorInstance?.isActive('bold') ? 'bg-blue-100 text-blue-700' : 'hover:bg-gray-100 text-gray-700'
+                    editorInstance?.isActive("bold")
+                      ? "bg-blue-100 text-blue-700"
+                      : "hover:bg-gray-100 text-gray-700"
                   }`}
                   title="Bold (Ctrl+B)"
                 >
@@ -355,9 +391,13 @@ export default function AdminDocumentEditPage() {
                   <span>Bold</span>
                 </button>
                 <button
-                  onClick={() => editorInstance?.chain().focus().toggleItalic().run()}
+                  onClick={() =>
+                    editorInstance?.chain().focus().toggleItalic().run()
+                  }
                   className={`flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-colors ${
-                    editorInstance?.isActive('italic') ? 'bg-blue-100 text-blue-700' : 'hover:bg-gray-100 text-gray-700'
+                    editorInstance?.isActive("italic")
+                      ? "bg-blue-100 text-blue-700"
+                      : "hover:bg-gray-100 text-gray-700"
                   }`}
                   title="Italic (Ctrl+I)"
                 >
@@ -365,9 +405,13 @@ export default function AdminDocumentEditPage() {
                   <span>Italic</span>
                 </button>
                 <button
-                  onClick={() => editorInstance?.chain().focus().toggleCode().run()}
+                  onClick={() =>
+                    editorInstance?.chain().focus().toggleCode().run()
+                  }
                   className={`flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-colors ${
-                    editorInstance?.isActive('code') ? 'bg-blue-100 text-blue-700' : 'hover:bg-gray-100 text-gray-700'
+                    editorInstance?.isActive("code")
+                      ? "bg-blue-100 text-blue-700"
+                      : "hover:bg-gray-100 text-gray-700"
                   }`}
                   title="Inline Code"
                 >
@@ -418,7 +462,7 @@ export default function AdminDocumentEditPage() {
               <p className="text-xs font-semibold text-gray-700 uppercase tracking-wider">
                 Colors
               </p>
-              
+
               {/* Text Color */}
               <div className="space-y-1">
                 <label className="text-xs text-gray-600">Text Color</label>
@@ -429,12 +473,12 @@ export default function AdminDocumentEditPage() {
                   >
                     <Palette className="w-4 h-4" />
                     <span className="flex-1 text-left">Select Color</span>
-                    <div 
+                    <div
                       className="w-6 h-6 rounded border border-gray-300"
                       style={{ backgroundColor: selectedTextColor }}
                     />
                   </button>
-                  
+
                   {showTextColorPicker && (
                     <div className="absolute left-0 top-full mt-1 p-3 bg-white border rounded-lg shadow-lg z-20 w-full">
                       {/* Color Picker Input */}
@@ -448,23 +492,31 @@ export default function AdminDocumentEditPage() {
                           onChange={(e) => {
                             const color = e.target.value;
                             setSelectedTextColor(color);
-                            editorInstance?.chain().focus().setColor(color).run();
+                            editorInstance
+                              ?.chain()
+                              .focus()
+                              .setColor(color)
+                              .run();
                           }}
                           className="w-full h-10 rounded border border-gray-300 cursor-pointer"
                         />
                       </div>
-                      
+
                       {/* Preset Colors */}
                       <div>
                         <label className="block text-xs font-medium text-gray-700 mb-1">
                           Quick Colors
                         </label>
                         <div className="grid grid-cols-5 gap-1">
-                          {COLORS.map(color => (
+                          {COLORS.map((color) => (
                             <button
                               key={color}
                               onClick={() => {
-                                editorInstance?.chain().focus().setColor(color).run();
+                                editorInstance
+                                  ?.chain()
+                                  .focus()
+                                  .setColor(color)
+                                  .run();
                                 setSelectedTextColor(color);
                                 setShowTextColorPicker(false);
                               }}
@@ -485,17 +537,19 @@ export default function AdminDocumentEditPage() {
                 <label className="text-xs text-gray-600">Highlight</label>
                 <div className="relative color-picker-container">
                   <button
-                    onClick={() => setShowHighlightColorPicker(!showHighlightColorPicker)}
+                    onClick={() =>
+                      setShowHighlightColorPicker(!showHighlightColorPicker)
+                    }
                     className="w-full flex items-center gap-2 px-3 py-2 text-sm rounded-lg hover:bg-gray-100 border border-gray-300 transition-colors"
                   >
                     <Highlighter className="w-4 h-4" />
                     <span className="flex-1 text-left">Select Color</span>
-                    <div 
+                    <div
                       className="w-6 h-6 rounded border border-gray-300"
                       style={{ backgroundColor: selectedHighlightColor }}
                     />
                   </button>
-                  
+
                   {showHighlightColorPicker && (
                     <div className="absolute left-0 top-full mt-1 p-3 bg-white border rounded-lg shadow-lg z-20 w-full">
                       {/* Color Picker Input */}
@@ -509,23 +563,31 @@ export default function AdminDocumentEditPage() {
                           onChange={(e) => {
                             const color = e.target.value;
                             setSelectedHighlightColor(color);
-                            editorInstance?.chain().focus().toggleHighlight({ color }).run();
+                            editorInstance
+                              ?.chain()
+                              .focus()
+                              .toggleHighlight({ color })
+                              .run();
                           }}
                           className="w-full h-10 rounded border border-gray-300 cursor-pointer"
                         />
                       </div>
-                      
+
                       {/* Preset Colors */}
                       <div>
                         <label className="block text-xs font-medium text-gray-700 mb-1">
                           Quick Colors
                         </label>
                         <div className="grid grid-cols-5 gap-1">
-                          {HIGHLIGHT_COLORS.map(color => (
+                          {HIGHLIGHT_COLORS.map((color) => (
                             <button
                               key={color}
                               onClick={() => {
-                                editorInstance?.chain().focus().toggleHighlight({ color }).run();
+                                editorInstance
+                                  ?.chain()
+                                  .focus()
+                                  .toggleHighlight({ color })
+                                  .run();
                                 setSelectedHighlightColor(color);
                                 setShowHighlightColorPicker(false);
                               }}
@@ -578,7 +640,7 @@ export default function AdminDocumentEditPage() {
                   onChange={(e) => setSelectedLanguage(e.target.value)}
                   className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
-                  {CODE_LANGUAGES.map(lang => (
+                  {CODE_LANGUAGES.map((lang) => (
                     <option key={lang.value} value={lang.value}>
                       {lang.label}
                     </option>
@@ -587,7 +649,9 @@ export default function AdminDocumentEditPage() {
                 <button
                   onClick={insertCodeBlock}
                   className={`w-full flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-colors ${
-                    editorInstance?.isActive('codeBlock') ? 'bg-blue-100 text-blue-700' : 'hover:bg-gray-100 text-gray-700 border border-gray-300'
+                    editorInstance?.isActive("codeBlock")
+                      ? "bg-blue-100 text-blue-700"
+                      : "hover:bg-gray-100 text-gray-700 border border-gray-300"
                   }`}
                 >
                   <Terminal className="w-4 h-4" />
@@ -636,12 +700,14 @@ export default function AdminDocumentEditPage() {
               <input
                 type="text"
                 value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, title: e.target.value })
+                }
                 placeholder="Enter document title"
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Display Order
@@ -650,7 +716,8 @@ export default function AdminDocumentEditPage() {
                 type="number"
                 value={formData.displayOrder || 1}
                 onChange={(e) => {
-                  const value = e.target.value === '' ? 1 : parseInt(e.target.value, 10);
+                  const value =
+                    e.target.value === "" ? 1 : parseInt(e.target.value, 10);
                   if (!isNaN(value) && value > 0) {
                     setFormData({ ...formData, displayOrder: value });
                   }
@@ -704,7 +771,8 @@ export default function AdminDocumentEditPage() {
                 ))}
               </div>
               <p className="mt-2 text-sm text-gray-500">
-                Note: Removing images here will also remove them from the document content.
+                Note: Removing images here will also remove them from the
+                document content.
               </p>
             </div>
           )}
@@ -729,7 +797,7 @@ export default function AdminDocumentEditPage() {
               ) : (
                 <>
                   <SaveIcon className="w-4 h-4" />
-                  {isNew ? 'Create Document' : 'Save Changes'}
+                  {isNew ? "Create Document" : "Save Changes"}
                 </>
               )}
             </button>
@@ -742,40 +810,65 @@ export default function AdminDocumentEditPage() {
           </div>
 
           {/* Document Size - Live Updates */}
-          <div className={`p-4 rounded-lg border-2 transition-all ${
-            isOverSize 
-              ? 'bg-red-50 border-red-500' 
-              : isWarningSize
-              ? 'bg-yellow-50 border-yellow-400'
-              : 'bg-blue-50 border-blue-300'
-          }`}>
+          <div
+            className={`p-4 rounded-lg border-2 transition-all ${
+              isOverSize
+                ? "bg-red-50 border-red-500"
+                : isWarningSize
+                ? "bg-yellow-50 border-yellow-400"
+                : "bg-blue-50 border-blue-300"
+            }`}
+          >
             <div className="flex items-start space-x-2 mb-2">
               {isOverSize && (
                 <AlertTriangleIcon className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
               )}
               <div className="flex-1">
-                <h3 className={`font-semibold text-sm mb-1 ${
-                  isOverSize ? 'text-red-900' : isWarningSize ? 'text-yellow-900' : 'text-blue-900'
-                }`}>
+                <h3
+                  className={`font-semibold text-sm mb-1 ${
+                    isOverSize
+                      ? "text-red-900"
+                      : isWarningSize
+                      ? "text-yellow-900"
+                      : "text-blue-900"
+                  }`}
+                >
                   📊 Document Size
                 </h3>
-                <div className={`space-y-1 text-xs ${
-                  isOverSize ? 'text-red-700' : isWarningSize ? 'text-yellow-700' : 'text-blue-700'
-                }`}>
+                <div
+                  className={`space-y-1 text-xs ${
+                    isOverSize
+                      ? "text-red-700"
+                      : isWarningSize
+                      ? "text-yellow-700"
+                      : "text-blue-700"
+                  }`}
+                >
                   <div className="flex justify-between">
                     <span>Current:</span>
-                    <span className="font-semibold">{formatSize(documentSize)}</span>
+                    <span className="font-semibold">
+                      {formatSize(documentSize)}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span>Max Limit:</span>
                     <span className="font-semibold">5.0 MB</span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
-                    <div 
+                    <div
                       className={`h-2 rounded-full transition-all ${
-                        isOverSize ? 'bg-red-600' : isWarningSize ? 'bg-yellow-500' : 'bg-blue-600'
+                        isOverSize
+                          ? "bg-red-600"
+                          : isWarningSize
+                          ? "bg-yellow-500"
+                          : "bg-blue-600"
                       }`}
-                      style={{ width: `${Math.min((documentSize / (5 * 1024 * 1024)) * 100, 100)}%` }}
+                      style={{
+                        width: `${Math.min(
+                          (documentSize / (5 * 1024 * 1024)) * 100,
+                          100
+                        )}%`,
+                      }}
                     />
                   </div>
                 </div>
@@ -811,7 +904,9 @@ export default function AdminDocumentEditPage() {
             </div>
 
             <div className="p-3 bg-white rounded-lg border border-gray-200">
-              <h3 className="font-semibold text-gray-900 mb-1">📝 Formatting</h3>
+              <h3 className="font-semibold text-gray-900 mb-1">
+                📝 Formatting
+              </h3>
               <ul className="space-y-1 text-xs text-gray-600">
                 <li>• Use left toolbar for styles</li>
                 <li>• Select custom colors</li>
@@ -829,7 +924,9 @@ export default function AdminDocumentEditPage() {
             </div>
 
             <div className="p-3 bg-white rounded-lg border border-gray-200">
-              <h3 className="font-semibold text-gray-900 mb-1">💻 Code Blocks</h3>
+              <h3 className="font-semibold text-gray-900 mb-1">
+                💻 Code Blocks
+              </h3>
               <ul className="space-y-1 text-xs text-gray-600">
                 <li>• Select language first</li>
                 <li>• Syntax highlighting auto</li>

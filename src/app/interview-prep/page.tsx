@@ -1,8 +1,8 @@
-// src/app/interview-prep/page.tsx
+// src/app/interview-prep/page.tsx - UPDATE IMPORTS
 
 'use client';
 
-import { useTopics } from '@/hooks/useCoursesManagement';
+import { usePublicTopics } from '@/courses/hooks';  
 import Link from 'next/link';
 import {
   AcademicCapIcon,
@@ -17,7 +17,7 @@ import Image from 'next/image';
 import { Loader2Icon } from 'lucide-react';
 
 function Content() {
-  const { data: topicsData, isLoading } = useTopics();
+  const { data: topicsData, isLoading } = usePublicTopics(); // Changed hook
   const { user } = useAuth();
   
   const topics = topicsData?.data || [];
