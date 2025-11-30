@@ -2,14 +2,15 @@
 
 "use client";
 
+import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import { useCurrentUserProgressStats } from "@/hooks/useUserProgress";
+import { useUserProgressStats, usePaginatedSolvedQuestions } from "@/userstats/hooks";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import UserLayout from "@/components/layout/UserLayout";
 import { roleUtils } from "@/lib/utils/auth";
-import { dateUtils, stringUtils } from "@/lib/utils/common";
+import { stringUtils, dateUtils } from "@/lib/utils/common";
 import { QUESTION_LEVEL_COLORS, QUESTION_LEVEL_LABELS } from "@/constants";
-import { BookOpen, Award, TrendingUp, Clock, Target } from "lucide-react";
+import { BookOpen, Award, TrendingUp, Clock, Target, ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
 
 // Loading component for skeleton UI
@@ -47,13 +48,102 @@ function ErrorState({ error }: { error: Error }) {
   );
 }
 
+// Pagination component
+function Pagination({ 
+  currentPage, 
+  totalPages, 
+  onPageChange 
+}: { 
+  currentPage: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+}) {
+  if (totalPages <= 1) return null;
+
+  const pages: (number | string)[] = [];
+  const maxVisible = 5;
+
+  if (totalPages <= maxVisible) {
+    // Show all pages
+    for (let i = 1; i <= totalPages; i++) {
+      pages.push(i);
+    }
+  } else {
+    // Show first, last, and current with ellipsis
+    if (currentPage <= 3) {
+      for (let i = 1; i <= 4; i++) pages.push(i);
+      pages.push('...');
+      pages.push(totalPages);
+    } else if (currentPage >= totalPages - 2) {
+      pages.push(1);
+      pages.push('...');
+      for (let i = totalPages - 3; i <= totalPages; i++) pages.push(i);
+    } else {
+      pages.push(1);
+      pages.push('...');
+      pages.push(currentPage - 1);
+      pages.push(currentPage);
+      pages.push(currentPage + 1);
+      pages.push('...');
+      pages.push(totalPages);
+    }
+  }
+
+  return (
+    <div className="flex items-center justify-center space-x-2 mt-6">
+      <button
+        onClick={() => onPageChange(currentPage - 1)}
+        disabled={currentPage === 1}
+        className="p-2 rounded-lg border border-gray-300 dark:border-gray-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100 dark:hover:bg-gray-700"
+      >
+        <ChevronLeft size={20} />
+      </button>
+
+      {pages.map((page, idx) => (
+        typeof page === 'number' ? (
+          <button
+            key={idx}
+            onClick={() => onPageChange(page)}
+            className={`px-4 py-2 rounded-lg border ${
+              currentPage === page
+                ? 'bg-blue-600 text-white border-blue-600'
+                : 'border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700'
+            }`}
+          >
+            {page}
+          </button>
+        ) : (
+          <span key={idx} className="px-2 text-gray-500">
+            {page}
+          </span>
+        )
+      ))}
+
+      <button
+        onClick={() => onPageChange(currentPage + 1)}
+        disabled={currentPage === totalPages}
+        className="p-2 rounded-lg border border-gray-300 dark:border-gray-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100 dark:hover:bg-gray-700"
+      >
+        <ChevronRight size={20} />
+      </button>
+    </div>
+  );
+}
+
 function Content() {
   const { user } = useAuth();
+  const [currentPage, setCurrentPage] = useState(1);
+  
   const {
-    data: progressStats,
+    data: stats,
     isLoading: statsLoading,
     error: statsError,
-  } = useCurrentUserProgressStats();
+  } = useUserProgressStats();
+
+  const {
+    data: paginatedData,
+    isLoading: paginatedLoading,
+  } = usePaginatedSolvedQuestions(currentPage);
 
   if (!user) return null;
 
@@ -91,22 +181,19 @@ function Content() {
   }
 
   // Generate stats cards from real API data
-  const statsCards = progressStats
+  const statsCards = stats
     ? [
         {
           name: "Problems Solved",
-          value: progressStats.totalSolved.toString(),
-          change: `${(
-            (progressStats.totalSolved / progressStats.totalQuestions) *
-            100
-          ).toFixed(1)}%`,
+          value: stats.totalSolved.toString(),
+          change: `${stats.progressPercentage.toFixed(1)}%`,
           changeType: "positive" as ChangeType,
           icon: BookOpen,
-          description: `out of ${progressStats.totalQuestions} total`,
+          description: `out of ${stats.totalQuestions} total`,
         },
         {
           name: "Recent Activity",
-          value: progressStats.recentSolved.toString(),
+          value: stats.recentSolved.toString(),
           change: "This week",
           changeType: "neutral" as ChangeType,
           icon: TrendingUp,
@@ -114,12 +201,12 @@ function Content() {
         },
         {
           name: "Overall Progress",
-          value: `${progressStats.progressPercentage.toFixed(1)}%`,
+          value: `${stats.progressPercentage.toFixed(1)}%`,
           change:
-            progressStats.totalSolved > 0
-              ? "+" + progressStats.totalSolved
+            stats.totalSolved > 0
+              ? "+" + stats.totalSolved
               : "0",
-          changeType: (progressStats.totalSolved > 0
+          changeType: (stats.totalSolved > 0
             ? "positive"
             : "neutral") as ChangeType,
           icon: Target,
@@ -131,7 +218,7 @@ function Content() {
   return (
     <UserLayout>
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-        {/* Header Section with Left-Right Layout */}
+        {/* Header Section */}
         <div className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
@@ -154,7 +241,6 @@ function Content() {
                 </div>
               </div>
 
-              {/* Right side - User info */}
               {/* Right side - User info */}
               <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 md:min-w-[280px]">
                 <div className="space-y-3">
@@ -237,7 +323,7 @@ function Content() {
           {statsLoading && <LoadingStats />}
 
           {/* Stats Grid - Real data from API */}
-          {!statsLoading && progressStats && (
+          {!statsLoading && stats && (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
               {statsCards.map((stat) => {
                 const Icon = stat.icon;
@@ -284,7 +370,7 @@ function Content() {
           )}
 
           {/* Progress by Level - Real data from API */}
-          {!statsLoading && progressStats && (
+          {!statsLoading && stats && (
             <div className="mb-8">
               <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
@@ -292,9 +378,9 @@ function Content() {
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {(["easy", "medium", "hard"] as const).map((level) => {
-                    const solved = progressStats.solvedByLevel[level];
-                    const total = progressStats.totalByLevel[level];
-                    const percentage = progressStats.progressByLevel[level];
+                    const solved = stats.solvedByLevel[level];
+                    const total = stats.totalByLevel[level];
+                    const percentage = stats.progressByLevel[level];
                     const levelKey =
                       level.toUpperCase() as keyof typeof QUESTION_LEVEL_COLORS;
                     const colors = QUESTION_LEVEL_COLORS[levelKey];
@@ -334,97 +420,102 @@ function Content() {
             </div>
           )}
 
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-            {/* Recent Activity - Takes most space */}
-            <div className="lg:col-span-3">
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
-                <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                    Recent Activity
-                  </h3>
-                </div>
-                <div className="p-6">
-                  {statsLoading ? (
-                    <div className="space-y-4">
-                      {[1, 2, 3].map((i) => (
-                        <div
-                          key={i}
-                          className="animate-pulse flex items-start space-x-4"
-                        >
-                          <div className="w-2 h-2 bg-gray-200 dark:bg-gray-700 rounded-full mt-2"></div>
-                          <div className="flex-1">
-                            <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded mb-2"></div>
-                            <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : progressStats &&
-                    progressStats.recentSolvedQuestions.length > 0 ? (
-                    <div className="space-y-4">
-                      {progressStats.recentSolvedQuestions.map((activity) => {
-                        const levelKey =
-                          activity.level.toUpperCase() as keyof typeof QUESTION_LEVEL_COLORS;
-                        const colors = QUESTION_LEVEL_COLORS[levelKey];
-
-                        return (
-                          <div
-                            key={activity.questionId}
-                            className="flex items-start space-x-4"
-                          >
-                            <div className="flex-shrink-0">
-                              <div className="w-2 h-2 mt-2 rounded-full bg-green-500" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center justify-between">
-                                <Link
-                                  href={`/questions/${activity.questionId}`}
-                                  className="text-sm font-medium text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 truncate"
-                                >
-                                  {activity.title}
-                                </Link>
-                                <p className="text-xs text-gray-500 dark:text-gray-400 flex-shrink-0 ml-2">
-                                  {dateUtils.formatRelativeTime(
-                                    activity.solvedAt
-                                  )}
-                                </p>
-                              </div>
-                              <div className="mt-1 flex items-center space-x-2">
-                                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200">
-                                  {activity.category}
-                                </span>
-                                <span
-                                  className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${colors.bg} ${colors.text}`}
-                                >
-                                  {QUESTION_LEVEL_LABELS[levelKey]}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    <div className="text-center py-8">
-                      <Clock className="mx-auto h-12 w-12 text-gray-400" />
-                      <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-white">
-                        No recent activity
-                      </h3>
-                      <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                        Start solving problems to see your activity here.
-                      </p>
-                      <div className="mt-6">
-                        <Link
-                          href="/questions"
-                          className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
-                        >
-                          Browse Questions
-                        </Link>
+          {/* Solved Questions List */}
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+            <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                Solved Questions
+              </h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                Your solved problems sorted by most recent
+              </p>
+            </div>
+            <div className="p-6">
+              {statsLoading || paginatedLoading ? (
+                <div className="space-y-4">
+                  {[1, 2, 3, 4, 5].map((i) => (
+                    <div
+                      key={i}
+                      className="animate-pulse flex items-start space-x-4"
+                    >
+                      <div className="w-2 h-2 bg-gray-200 dark:bg-gray-700 rounded-full mt-2"></div>
+                      <div className="flex-1">
+                        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded mb-2"></div>
+                        <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
                       </div>
                     </div>
-                  )}
+                  ))}
                 </div>
-              </div>
+              ) : paginatedData && paginatedData.questions.length > 0 ? (
+                <>
+                  <div className="space-y-4">
+                    {paginatedData.questions.map((question) => {
+                      const levelKey =
+                        question.level.toUpperCase() as keyof typeof QUESTION_LEVEL_COLORS;
+                      const colors = QUESTION_LEVEL_COLORS[levelKey];
+
+                      return (
+                        <div
+                          key={question.questionId}
+                          className="flex items-start space-x-4 p-4 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+                        >
+                          <div className="flex-shrink-0">
+                            <div className="w-2 h-2 mt-2 rounded-full bg-green-500" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between mb-2">
+                              <Link
+                                href={`/questions/${question.questionId}`}
+                                className="text-sm font-medium text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 truncate"
+                              >
+                                {question.title}
+                              </Link>
+                              <p className="text-xs text-gray-500 dark:text-gray-400 flex-shrink-0 ml-2">
+                                {dateUtils.formatRelativeTime(question.solvedAt)}
+                              </p>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200">
+                                {question.categoryName}
+                              </span>
+                              <span
+                                className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${colors.bg} ${colors.text}`}
+                              >
+                                {QUESTION_LEVEL_LABELS[levelKey]}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Pagination */}
+                  <Pagination
+                    currentPage={paginatedData.currentPage}
+                    totalPages={paginatedData.totalPages}
+                    onPageChange={setCurrentPage}
+                  />
+                </>
+              ) : (
+                <div className="text-center py-8">
+                  <Clock className="mx-auto h-12 w-12 text-gray-400" />
+                  <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-white">
+                    No solved questions yet
+                  </h3>
+                  <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                    Start solving problems to see your progress here.
+                  </p>
+                  <div className="mt-6">
+                    <Link
+                      href="/categories"
+                      className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+                    >
+                      Browse Questions
+                    </Link>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -440,3 +531,5 @@ export default function MePage() {
     </ProtectedRoute>
   );
 }
+ 
+// usePaginatedSolvedQuestions(page) → Uses cached stats → Returns page of questions
