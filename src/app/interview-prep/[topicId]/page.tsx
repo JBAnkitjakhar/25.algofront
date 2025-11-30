@@ -115,7 +115,10 @@ function TopicContent() {
                 .map((doc, index) => (
                   <Link
                     key={doc.id}
-                    href={`/interview-prep/${topicId}/${doc.id}`}
+                    href={{
+                      pathname: `/interview-prep/${topicId}/${doc.id}`,
+                      query: { topicName: topic.name } // ✅ Pass topic name
+                    }}
                     className="block bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-lg transition-shadow duration-200 border border-gray-200 dark:border-gray-700"
                   >
                     <div className="p-6">

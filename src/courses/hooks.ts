@@ -1,10 +1,15 @@
 // src/courses/hooks.ts
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { coursesService } from './service';
-import { COURSES_QUERY_KEYS } from './constants';
-import toast from 'react-hot-toast';
-import { CreateDocumentRequest, CreateTopicRequest, UpdateDocumentRequest, UpdateTopicRequest } from './types';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { coursesService } from "./service";
+import { COURSES_QUERY_KEYS } from "./constants";
+import toast from "react-hot-toast";
+import {
+  CreateDocumentRequest,
+  CreateTopicRequest,
+  UpdateDocumentRequest,
+  UpdateTopicRequest,
+} from "./types";
 
 // ==================== ADMIN HOOKS ====================
 
@@ -16,7 +21,7 @@ export function useAdminTopics() {
       if (response.success && response.data) {
         return response.data;
       }
-      throw new Error(response.message || 'Failed to fetch topics');
+      throw new Error(response.message || "Failed to fetch topics");
     },
     staleTime: 2 * 60 * 1000, // 2 min
   });
@@ -31,13 +36,17 @@ export function useCreateTopic() {
       if (response.success && response.data) {
         return response.data;
       }
-      throw new Error(response.message || 'Failed to create topic');
+      throw new Error(response.message || "Failed to create topic");
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: COURSES_QUERY_KEYS.ADMIN_TOPICS_LIST });
-      queryClient.invalidateQueries({ queryKey: COURSES_QUERY_KEYS.PUBLIC_TOPICS_LIST });
+      queryClient.invalidateQueries({
+        queryKey: COURSES_QUERY_KEYS.ADMIN_TOPICS_LIST,
+      });
+      queryClient.invalidateQueries({
+        queryKey: COURSES_QUERY_KEYS.PUBLIC_TOPICS_LIST,
+      });
       queryClient.invalidateQueries({ queryKey: COURSES_QUERY_KEYS.STATS });
-      toast.success('Topic created successfully');
+      toast.success("Topic created successfully");
     },
     onError: (error: Error) => {
       toast.error(error.message);
@@ -49,18 +58,30 @@ export function useUpdateTopic() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ topicId, data }: { topicId: string; data: UpdateTopicRequest }) => {
+    mutationFn: async ({
+      topicId,
+      data,
+    }: {
+      topicId: string;
+      data: UpdateTopicRequest;
+    }) => {
       const response = await coursesService.updateTopic(topicId, data);
       if (response.success && response.data) {
         return response.data;
       }
-      throw new Error(response.message || 'Failed to update topic');
+      throw new Error(response.message || "Failed to update topic");
     },
     onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({ queryKey: COURSES_QUERY_KEYS.ADMIN_TOPICS_LIST });
-      queryClient.invalidateQueries({ queryKey: COURSES_QUERY_KEYS.PUBLIC_TOPICS_LIST });
-      queryClient.invalidateQueries({ queryKey: COURSES_QUERY_KEYS.TOPIC_DETAIL(variables.topicId) });
-      toast.success('Topic updated successfully');
+      queryClient.invalidateQueries({
+        queryKey: COURSES_QUERY_KEYS.ADMIN_TOPICS_LIST,
+      });
+      queryClient.invalidateQueries({
+        queryKey: COURSES_QUERY_KEYS.PUBLIC_TOPICS_LIST,
+      });
+      queryClient.invalidateQueries({
+        queryKey: COURSES_QUERY_KEYS.TOPIC_DETAIL(variables.topicId),
+      });
+      toast.success("Topic updated successfully");
     },
     onError: (error: Error) => {
       toast.error(error.message);
@@ -77,13 +98,19 @@ export function useToggleTopicVisibility() {
       if (response.success && response.data) {
         return response.data;
       }
-      throw new Error(response.message || 'Failed to toggle visibility');
+      throw new Error(response.message || "Failed to toggle visibility");
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: COURSES_QUERY_KEYS.ADMIN_TOPICS_LIST });
-      queryClient.invalidateQueries({ queryKey: COURSES_QUERY_KEYS.PUBLIC_TOPICS_LIST });
-      queryClient.invalidateQueries({ queryKey: COURSES_QUERY_KEYS.TOPIC_DETAIL(data.id) });
-      toast.success(`Topic is now ${data.isPublic ? 'public' : 'private'}`);
+      queryClient.invalidateQueries({
+        queryKey: COURSES_QUERY_KEYS.ADMIN_TOPICS_LIST,
+      });
+      queryClient.invalidateQueries({
+        queryKey: COURSES_QUERY_KEYS.PUBLIC_TOPICS_LIST,
+      });
+      queryClient.invalidateQueries({
+        queryKey: COURSES_QUERY_KEYS.TOPIC_DETAIL(data.id),
+      });
+      toast.success(`Topic is now ${data.isPublic ? "public" : "private"}`);
     },
     onError: (error: Error) => {
       toast.error(error.message);
@@ -100,13 +127,17 @@ export function useDeleteTopic() {
       if (response.success) {
         return response.data;
       }
-      throw new Error(response.message || 'Failed to delete topic');
+      throw new Error(response.message || "Failed to delete topic");
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: COURSES_QUERY_KEYS.ADMIN_TOPICS_LIST });
-      queryClient.invalidateQueries({ queryKey: COURSES_QUERY_KEYS.PUBLIC_TOPICS_LIST });
+      queryClient.invalidateQueries({
+        queryKey: COURSES_QUERY_KEYS.ADMIN_TOPICS_LIST,
+      });
+      queryClient.invalidateQueries({
+        queryKey: COURSES_QUERY_KEYS.PUBLIC_TOPICS_LIST,
+      });
       queryClient.invalidateQueries({ queryKey: COURSES_QUERY_KEYS.STATS });
-      toast.success('Topic deleted successfully');
+      toast.success("Topic deleted successfully");
     },
     onError: (error: Error) => {
       toast.error(error.message);
@@ -123,13 +154,17 @@ export function useCreateDocument() {
       if (response.success && response.data) {
         return response.data;
       }
-      throw new Error(response.message || 'Failed to create document');
+      throw new Error(response.message || "Failed to create document");
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: COURSES_QUERY_KEYS.DOCS_BY_TOPIC(data.topicId) });
-      queryClient.invalidateQueries({ queryKey: COURSES_QUERY_KEYS.ADMIN_TOPICS_LIST });
+      queryClient.invalidateQueries({
+        queryKey: COURSES_QUERY_KEYS.DOCS_BY_TOPIC(data.topicId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: COURSES_QUERY_KEYS.ADMIN_TOPICS_LIST,
+      });
       queryClient.invalidateQueries({ queryKey: COURSES_QUERY_KEYS.STATS });
-      toast.success('Document created successfully');
+      toast.success("Document created successfully");
     },
     onError: (error: Error) => {
       toast.error(error.message);
@@ -141,22 +176,43 @@ export function useUpdateDocument() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ docId, data }: { docId: string; data: UpdateDocumentRequest }) => {
-      const response = await coursesService.updateDocument(docId, data);
-      if (response.success && response.data) {
-        return response.data;
+    mutationFn: async ({
+      docId,
+      data,
+    }: {
+      docId: string;
+      data: UpdateDocumentRequest;
+    }) => {
+      console.log("🔍 useUpdateDocument mutation called:", { docId, data });
+
+      try {
+        const response = await coursesService.updateDocument(docId, data);
+        if (response.success && response.data) {
+          return response.data;
+        }
+        throw new Error(response.message || "Failed to update document");
+      } catch (error) {
+        console.error("❌ Error in mutation function:", error);
+        throw error;
       }
-      throw new Error(response.message || 'Failed to update document');
     },
     onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({ queryKey: COURSES_QUERY_KEYS.DOC_DETAIL(variables.docId) });
-      queryClient.invalidateQueries({ queryKey: COURSES_QUERY_KEYS.DOCS_BY_TOPIC(data.topicId) });
+      console.log("✅ Update successful:", { data, variables });
+      queryClient.invalidateQueries({
+        queryKey: COURSES_QUERY_KEYS.DOC_DETAIL(variables.docId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: COURSES_QUERY_KEYS.DOCS_BY_TOPIC(data.topicId),
+      });
       if (variables.data.topicId && variables.data.topicId !== data.topicId) {
-        queryClient.invalidateQueries({ queryKey: COURSES_QUERY_KEYS.DOCS_BY_TOPIC(variables.data.topicId) });
+        queryClient.invalidateQueries({
+          queryKey: COURSES_QUERY_KEYS.DOCS_BY_TOPIC(variables.data.topicId),
+        });
       }
-      toast.success('Document updated successfully');
+      toast.success("Document updated successfully");
     },
     onError: (error: Error) => {
+      console.error("❌ Mutation error:", error);
       toast.error(error.message);
     },
   });
@@ -166,18 +222,28 @@ export function useDeleteDocument() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ docId, topicId }: { docId: string; topicId: string }) => {
+    mutationFn: async ({
+      docId,
+      topicId,
+    }: {
+      docId: string;
+      topicId: string;
+    }) => {
       const response = await coursesService.deleteDocument(docId);
       if (response.success) {
         return { ...response.data, topicId };
       }
-      throw new Error(response.message || 'Failed to delete document');
+      throw new Error(response.message || "Failed to delete document");
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: COURSES_QUERY_KEYS.DOCS_BY_TOPIC(data.topicId) });
-      queryClient.invalidateQueries({ queryKey: COURSES_QUERY_KEYS.ADMIN_TOPICS_LIST });
+      queryClient.invalidateQueries({
+        queryKey: COURSES_QUERY_KEYS.DOCS_BY_TOPIC(data.topicId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: COURSES_QUERY_KEYS.ADMIN_TOPICS_LIST,
+      });
       queryClient.invalidateQueries({ queryKey: COURSES_QUERY_KEYS.STATS });
-      toast.success('Document deleted successfully');
+      toast.success("Document deleted successfully");
     },
     onError: (error: Error) => {
       toast.error(error.message);
@@ -192,10 +258,10 @@ export function useUploadCourseImage() {
       if (response.success && response.data) {
         return response.data;
       }
-      throw new Error(response.message || 'Failed to upload image');
+      throw new Error(response.message || "Failed to upload image");
     },
     onSuccess: () => {
-      toast.success('Image uploaded successfully');
+      toast.success("Image uploaded successfully");
     },
     onError: (error: Error) => {
       toast.error(error.message);
@@ -210,10 +276,10 @@ export function useDeleteCourseImage() {
       if (response.success) {
         return response.data;
       }
-      throw new Error(response.message || 'Failed to delete image');
+      throw new Error(response.message || "Failed to delete image");
     },
     onSuccess: () => {
-      toast.success('Image deleted successfully');
+      toast.success("Image deleted successfully");
     },
     onError: (error: Error) => {
       toast.error(error.message);
@@ -229,7 +295,7 @@ export function useCourseImageConfig() {
       if (response.success && response.data) {
         return response.data;
       }
-      throw new Error(response.message || 'Failed to fetch image config');
+      throw new Error(response.message || "Failed to fetch image config");
     },
     staleTime: 30 * 60 * 1000,
   });
@@ -243,7 +309,7 @@ export function useCourseStats() {
       if (response.success && response.data) {
         return response.data;
       }
-      throw new Error(response.message || 'Failed to fetch stats');
+      throw new Error(response.message || "Failed to fetch stats");
     },
     staleTime: 5 * 60 * 1000,
   });
@@ -259,7 +325,7 @@ export function usePublicTopics() {
       if (response.success && response.data) {
         return response.data;
       }
-      throw new Error(response.message || 'Failed to fetch topics');
+      throw new Error(response.message || "Failed to fetch topics");
     },
     staleTime: 2 * 60 * 1000,
   });
@@ -273,7 +339,7 @@ export function useTopic(topicId: string) {
       if (response.success && response.data) {
         return response.data;
       }
-      throw new Error(response.message || 'Failed to fetch topic');
+      throw new Error(response.message || "Failed to fetch topic");
     },
     enabled: !!topicId,
     staleTime: 5 * 60 * 1000,
@@ -288,7 +354,7 @@ export function useDocumentsByTopic(topicId: string) {
       if (response.success && response.data) {
         return response.data;
       }
-      throw new Error(response.message || 'Failed to fetch documents');
+      throw new Error(response.message || "Failed to fetch documents");
     },
     enabled: !!topicId,
     staleTime: 3 * 60 * 1000,
@@ -303,7 +369,7 @@ export function useDocument(docId: string) {
       if (response.success && response.data) {
         return response.data;
       }
-      throw new Error(response.message || 'Failed to fetch document');
+      throw new Error(response.message || "Failed to fetch document");
     },
     enabled: !!docId,
     staleTime: 10 * 60 * 1000,

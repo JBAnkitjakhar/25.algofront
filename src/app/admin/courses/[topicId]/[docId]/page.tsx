@@ -6,11 +6,11 @@ import { useParams, useRouter } from "next/navigation";
 import { Editor } from "@tiptap/react";
 import {
   useDocument,
-  useTopic,
   useCreateDocument,
   useUpdateDocument,
   useDeleteCourseImage,
   useUploadCourseImage,
+  useAdminTopics,
 } from "@/courses/hooks";
 import CourseEditor from "@/components/admin/CourseEditor";
 import { ArrowLeftIcon, XMarkIcon } from "@heroicons/react/24/outline";
@@ -32,7 +32,11 @@ import {
   Palette,
   Terminal,
 } from "lucide-react";
-import type { CreateDocumentRequest, UpdateDocumentRequest, DocumentFormData } from '@/courses';
+import type {
+  CreateDocumentRequest,
+  UpdateDocumentRequest,
+  DocumentFormData,
+} from "@/courses";
 
 // Color palettes
 const COLORS = [
@@ -96,7 +100,8 @@ export default function AdminDocumentEditPage() {
   const docId = params.docId as string;
   const isNew = docId === "new";
 
-  const { data: topic } = useTopic(topicId);
+  const { data: allTopicsData } = useAdminTopics();
+  const topic = allTopicsData?.data?.find((t) => t.id === topicId);
   const { data: documentData, isLoading: isLoadingDoc } = useDocument(
     isNew ? "" : docId
   );

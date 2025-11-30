@@ -1,9 +1,8 @@
 // src/app/interview-prep/[topicId]/[docId]/page.tsx
-// REAL FIX - Apply syntax highlighting on user side
 
 'use client';
 
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import {
   ArrowLeftIcon,
   DocumentTextIcon,
@@ -40,7 +39,7 @@ import markdown from 'highlight.js/lib/languages/markdown';
 
 // Import the CSS for syntax highlighting
 import '@/components/admin/styles/CourseEditorHighlighting.css';
-import { useDocument, useTopic } from '@/courses';
+import { useDocument } from '@/courses';
 
 // Register all languages
 hljs.registerLanguage('javascript', javascript);
@@ -79,26 +78,24 @@ hljs.registerLanguage('md', markdown);
 function DocumentContent() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const topicId = params.topicId as string;
   const docId = params.docId as string;
   const contentRef = useRef<HTMLDivElement>(null);
   
   const { data: document, isLoading: isLoadingDoc } = useDocument(docId);
-  const { data: topic } = useTopic(topicId);
+  
+  // ✅ Get topic name from URL query parameter
+  const topicName = searchParams.get('topicName');
 
   // Apply syntax highlighting after content is rendered
   useEffect(() => {
     if (contentRef.current && document?.content) {
-      // console.log('👀 USER: Applying syntax highlighting to code blocks');
-      
-      // Find all code blocks
       const codeBlocks = contentRef.current.querySelectorAll('pre code');
-      // console.log('👀 USER: Found code blocks:', codeBlocks.length);
       
-      codeBlocks.forEach((block, index) => {
+      codeBlocks.forEach((block) => {
         const codeElement = block as HTMLElement;
         
-        // Get the language from class (e.g., "language-java")
         let language = 'plaintext';
         const classes = codeElement.className.split(' ');
         for (const cls of classes) {
@@ -108,11 +105,7 @@ function DocumentContent() {
           }
         }
         
-        // console.log(`👀 USER: Block ${index} language:`, language);
-        
-        // Apply highlighting
         try {
-          // If language is registered, use it; otherwise use auto-detection
           if (hljs.getLanguage(language)) {
             const result = hljs.highlight(codeElement.textContent || '', { 
               language: language,
@@ -120,20 +113,15 @@ function DocumentContent() {
             });
             codeElement.innerHTML = result.value;
             codeElement.classList.add('hljs');
-            // console.log(`✅ USER: Applied ${language} highlighting to block ${index}`);
           } else {
-            // Auto-detect language
             const result = hljs.highlightAuto(codeElement.textContent || '');
             codeElement.innerHTML = result.value;
             codeElement.classList.add('hljs');
-            // console.log(`✅ USER: Auto-detected ${result.language} for block ${index}`);
           }
         } catch (error) {
-          console.error(`❌ USER: Failed to highlight block ${index}:`, error);
+          console.error('Failed to highlight code block:', error);
         }
       });
-      
-      // console.log('✅ USER: Syntax highlighting complete!');
     }
   }, [document?.content]);
 
@@ -177,9 +165,10 @@ function DocumentContent() {
                   Back to Documents
                 </button>
                 
-                {topic && (
+                {/* ✅ Display topic name from query param */}
+                {topicName && (
                   <div className="text-sm text-gray-500 dark:text-gray-400">
-                    <span className="font-medium">{topic.name}</span>
+                    <span className="font-medium">{topicName}</span>
                   </div>
                 )}
               </div>

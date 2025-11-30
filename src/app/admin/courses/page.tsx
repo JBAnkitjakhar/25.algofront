@@ -51,6 +51,7 @@ export default function AdminCoursesPage() {
   
   const [isCreating, setIsCreating] = useState(false);
   const [editingTopic, setEditingTopic] = useState<Topic | null>(null);
+  const [togglingTopic, setTogglingTopic] = useState<Topic | null>(null); // ✅ NEW: For confirmation modal
   const [formData, setFormData] = useState<CreateTopicRequest>({
     name: '',
     description: '',
@@ -100,8 +101,12 @@ export default function AdminCoursesPage() {
     }
   };
 
-  const handleToggleVisibility = async (topicId: string) => {
-    await toggleVisibilityMutation.mutateAsync(topicId);
+  // ✅ NEW: Confirm before toggling
+  const handleToggleVisibilityConfirm = async () => {
+    if (!togglingTopic) return;
+    
+    await toggleVisibilityMutation.mutateAsync(togglingTopic.id);
+    setTogglingTopic(null);
   };
 
   return (
@@ -166,6 +171,50 @@ export default function AdminCoursesPage() {
             </div>
           </div>
         </div>
+
+        {/* ✅ NEW: Toggle Visibility Confirmation Modal */}
+        {togglingTopic && (
+          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+            <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+              <h3 className="text-lg font-bold text-gray-900 mb-4">
+                Confirm Visibility Change
+              </h3>
+              
+              <p className="text-sm text-gray-700 mb-6">
+                Are you sure you want to make <span className="font-semibold">{togglingTopic.name}</span>{' '}
+                <span className="font-semibold">
+                  {togglingTopic.isPublic ? 'private' : 'public'}
+                </span>?
+              </p>
+
+              {togglingTopic.isPublic && (
+                <div className="mb-6 p-3 bg-yellow-50 border border-yellow-200 rounded">
+                  <p className="text-sm text-yellow-800">
+                    ⚠️ Making this topic private will hide it from all users.
+                  </p>
+                </div>
+              )}
+              
+              <div className="flex justify-end space-x-3">
+                <button
+                  onClick={() => setTogglingTopic(null)}
+                  className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleToggleVisibilityConfirm}
+                  disabled={toggleVisibilityMutation.isPending}
+                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+                >
+                  {toggleVisibilityMutation.isPending ? (
+                    <Loader2Icon className="w-5 h-5 animate-spin" />
+                  ) : 'Confirm'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Create/Edit Form Modal */}
         {isCreating && (
@@ -338,14 +387,15 @@ export default function AdminCoursesPage() {
                     
                     <div className="flex items-center space-x-2">
                       <Link
-                        href={`/admin/courses/${topic.id}/docs`}
+                        href={`/admin/courses/${topic.id}`}
                         className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                       >
                         View Docs
                         <ChevronRightIcon className="ml-1 h-3 w-3" />
                       </Link>
+                      {/* ✅ UPDATED: Opens confirmation modal */}
                       <button
-                        onClick={() => handleToggleVisibility(topic.id)}
+                        onClick={() => setTogglingTopic(topic)}
                         disabled={toggleVisibilityMutation.isPending}
                         className={`inline-flex items-center p-1.5 border border-transparent rounded-full ${
                           topic.isPublic 
@@ -354,9 +404,7 @@ export default function AdminCoursesPage() {
                         } focus:outline-none disabled:opacity-50`}
                         title={topic.isPublic ? 'Make Private' : 'Make Public'}
                       >
-                        {toggleVisibilityMutation.isPending ? (
-                          <Loader2Icon className="h-4 w-4 animate-spin" />
-                        ) : topic.isPublic ? (
+                        {topic.isPublic ? (
                           <EyeIcon className="h-4 w-4" />
                         ) : (
                           <EyeSlashIcon className="h-4 w-4" />

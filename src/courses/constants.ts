@@ -5,7 +5,7 @@ export const COURSES_ENDPOINTS = {
   CREATE_TOPIC: '/courses/topics',
   UPDATE_TOPIC: (topicId: string) => `/courses/topics/${topicId}`,
   DELETE_TOPIC: (topicId: string) => `/courses/topics/${topicId}`,
-  TOGGLE_VISIBILITY: (topicId: string) => `/courses/topics/${topicId}/visibility`,
+  TOGGLE_VISIBILITY: (topicId: string) => `/courses/topics/${topicId}/visibility`,  
   ALL_TOPICS_ADMIN: '/courses/topicsnamesall',
   
   CREATE_DOC: '/courses/docs',
@@ -16,7 +16,7 @@ export const COURSES_ENDPOINTS = {
   DELETE_IMAGE: '/courses/images',
   IMAGE_CONFIG: '/courses/images/config',
   
-  // User endpoints (public topics only)
+  // User endpoints
   PUBLIC_TOPICS: '/courses/topicsnames',
   GET_TOPIC: (topicId: string) => `/courses/topics/${topicId}`,
   GET_DOCS_BY_TOPIC: (topicId: string) => `/courses/topics/${topicId}/docs`,
