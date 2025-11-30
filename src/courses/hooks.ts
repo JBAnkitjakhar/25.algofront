@@ -12,6 +12,7 @@ import {
 } from "./types";
 
 // ==================== ADMIN HOOKS ====================
+// Admin hooks keep SHORT stale times for real-time updates
 
 export function useAdminTopics() {
   return useQuery({
@@ -23,7 +24,7 @@ export function useAdminTopics() {
       }
       throw new Error(response.message || "Failed to fetch topics");
     },
-    staleTime: 2 * 60 * 1000, // 2 min
+    staleTime: 2 * 60 * 1000, // 2 mins - short for admin
   });
 }
 
@@ -71,15 +72,18 @@ export function useUpdateTopic() {
       }
       throw new Error(response.message || "Failed to update topic");
     },
-    onSuccess: (data, variables) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: COURSES_QUERY_KEYS.ADMIN_TOPICS_LIST,
       });
       queryClient.invalidateQueries({
         queryKey: COURSES_QUERY_KEYS.PUBLIC_TOPICS_LIST,
       });
+      // Also invalidate docs that might display topic name
       queryClient.invalidateQueries({
-        queryKey: COURSES_QUERY_KEYS.TOPIC_DETAIL(variables.topicId),
+        predicate: (query) =>
+          query.queryKey[0] === 'courses' && 
+          query.queryKey[1] === 'docs'
       });
       toast.success("Topic updated successfully");
     },
@@ -88,6 +92,41 @@ export function useUpdateTopic() {
     },
   });
 }
+
+// export function useUpdateTopic() {
+//   const queryClient = useQueryClient();
+
+//   return useMutation({
+//     mutationFn: async ({
+//       topicId,
+//       data,
+//     }: {
+//       topicId: string;
+//       data: UpdateTopicRequest;
+//     }) => {
+//       const response = await coursesService.updateTopic(topicId, data);
+//       if (response.success && response.data) {
+//         return response.data;
+//       }
+//       throw new Error(response.message || "Failed to update topic");
+//     },
+//     onSuccess: (data, variables) => {
+//       queryClient.invalidateQueries({
+//         queryKey: COURSES_QUERY_KEYS.ADMIN_TOPICS_LIST,
+//       });
+//       queryClient.invalidateQueries({
+//         queryKey: COURSES_QUERY_KEYS.PUBLIC_TOPICS_LIST,
+//       });
+//       queryClient.invalidateQueries({
+//         queryKey: COURSES_QUERY_KEYS.TOPIC_DETAIL(variables.topicId),
+//       });
+//       toast.success("Topic updated successfully");
+//     },
+//     onError: (error: Error) => {
+//       toast.error(error.message);
+//     },
+//   });
+// }
 
 export function useToggleTopicVisibility() {
   const queryClient = useQueryClient();
@@ -106,9 +145,6 @@ export function useToggleTopicVisibility() {
       });
       queryClient.invalidateQueries({
         queryKey: COURSES_QUERY_KEYS.PUBLIC_TOPICS_LIST,
-      });
-      queryClient.invalidateQueries({
-        queryKey: COURSES_QUERY_KEYS.TOPIC_DETAIL(data.id),
       });
       toast.success(`Topic is now ${data.isPublic ? "public" : "private"}`);
     },
@@ -183,27 +219,20 @@ export function useUpdateDocument() {
       docId: string;
       data: UpdateDocumentRequest;
     }) => {
-      console.log("🔍 useUpdateDocument mutation called:", { docId, data });
-
-      try {
-        const response = await coursesService.updateDocument(docId, data);
-        if (response.success && response.data) {
-          return response.data;
-        }
-        throw new Error(response.message || "Failed to update document");
-      } catch (error) {
-        console.error("❌ Error in mutation function:", error);
-        throw error;
+      const response = await coursesService.updateDocument(docId, data);
+      if (response.success && response.data) {
+        return response.data;
       }
+      throw new Error(response.message || "Failed to update document");
     },
     onSuccess: (data, variables) => {
-      console.log("✅ Update successful:", { data, variables });
       queryClient.invalidateQueries({
         queryKey: COURSES_QUERY_KEYS.DOC_DETAIL(variables.docId),
       });
       queryClient.invalidateQueries({
         queryKey: COURSES_QUERY_KEYS.DOCS_BY_TOPIC(data.topicId),
       });
+      // If topic changed, invalidate old topic's docs too
       if (variables.data.topicId && variables.data.topicId !== data.topicId) {
         queryClient.invalidateQueries({
           queryKey: COURSES_QUERY_KEYS.DOCS_BY_TOPIC(variables.data.topicId),
@@ -212,7 +241,6 @@ export function useUpdateDocument() {
       toast.success("Document updated successfully");
     },
     onError: (error: Error) => {
-      console.error("❌ Mutation error:", error);
       toast.error(error.message);
     },
   });
@@ -297,7 +325,7 @@ export function useCourseImageConfig() {
       }
       throw new Error(response.message || "Failed to fetch image config");
     },
-    staleTime: 30 * 60 * 1000,
+    staleTime: 30 * 60 * 1000, // 30 mins - rarely changes
   });
 }
 
@@ -311,11 +339,12 @@ export function useCourseStats() {
       }
       throw new Error(response.message || "Failed to fetch stats");
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: 5 * 60 * 1000, // 5 mins - admin needs fresher data
   });
 }
 
 // ==================== USER HOOKS ====================
+// User hooks use LONG stale times for better performance
 
 export function usePublicTopics() {
   return useQuery({
@@ -327,22 +356,22 @@ export function usePublicTopics() {
       }
       throw new Error(response.message || "Failed to fetch topics");
     },
-    staleTime: 2 * 60 * 1000,
-  });
-}
-
-export function useTopic(topicId: string) {
-  return useQuery({
-    queryKey: COURSES_QUERY_KEYS.TOPIC_DETAIL(topicId),
-    queryFn: async () => {
-      const response = await coursesService.getTopicById(topicId);
-      if (response.success && response.data) {
-        return response.data;
-      }
-      throw new Error(response.message || "Failed to fetch topic");
-    },
-    enabled: !!topicId,
-    staleTime: 5 * 60 * 1000,
+    // ✅ Long stale time - topics list doesn't change often
+    staleTime: 20 * 60 * 1000, // 20 minutes
+    gcTime: 30 * 60 * 1000, // Keep in cache for 30 mins
+    
+    // ✅ Refetch on page refresh (component mount)
+    refetchOnMount: true,
+    
+    // ❌ Don't refetch on tab switch
+    refetchOnWindowFocus: false,
+    
+    // ❌ Don't refetch on network reconnect
+    refetchOnReconnect: false,
+    
+    // ❌ No background polling
+    refetchInterval: false,
+    refetchIntervalInBackground: false,
   });
 }
 
@@ -357,7 +386,23 @@ export function useDocumentsByTopic(topicId: string) {
       throw new Error(response.message || "Failed to fetch documents");
     },
     enabled: !!topicId,
-    staleTime: 3 * 60 * 1000,
+    
+    // ✅ Long stale time - docs list doesn't change often
+    staleTime: 20 * 60 * 1000, // 20 minutes
+    gcTime: 30 * 60 * 1000, // Keep in cache for 30 mins
+    
+    // ✅ Refetch on page refresh
+    refetchOnMount: true,
+    
+    // ❌ Don't refetch on tab switch
+    refetchOnWindowFocus: false,
+    
+    // ❌ Don't refetch on network reconnect
+    refetchOnReconnect: false,
+    
+    // ❌ No background polling
+    refetchInterval: false,
+    refetchIntervalInBackground: false,
   });
 }
 
@@ -372,6 +417,38 @@ export function useDocument(docId: string) {
       throw new Error(response.message || "Failed to fetch document");
     },
     enabled: !!docId,
-    staleTime: 10 * 60 * 1000,
+    
+    // ✅ Longest stale time - full document content rarely changes
+    staleTime: 20 * 60 * 1000, // 20 minutes
+    gcTime: 30 * 60 * 1000, // Keep in cache for 30 mins
+    
+    // ✅ Refetch on page refresh
+    refetchOnMount: true,
+    
+    // ❌ Don't refetch on tab switch
+    refetchOnWindowFocus: false,
+    
+    // ❌ Don't refetch on network reconnect
+    refetchOnReconnect: false,
+    
+    // ❌ No background polling
+    refetchInterval: false,
+    refetchIntervalInBackground: false,
   });
 }
+// ```
+
+// ---
+
+// ## 📊 Summary of Changes
+
+// ### **Kept (3 User Hooks):**
+// 1. ✅ `usePublicTopics()` - Topics list with metadata
+// 2. ✅ `useDocumentsByTopic()` - Docs list + topic details
+// 3. ✅ `useDocument()` - Full document content
+
+// First visit → Fetch from backend → Cache for 20 mins
+// Navigate within site → Use cache (instant)
+// After 20 mins → Still use cache (no auto-refetch)
+// Tab switch → Use cache (no refetch)
+// Page refresh (F5) → Fresh fetch from backend
