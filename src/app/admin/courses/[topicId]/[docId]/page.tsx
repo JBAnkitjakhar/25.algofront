@@ -11,7 +11,7 @@ import {
   useDeleteCourseImage,
   useUploadCourseImage,
   useAdminTopics,
-} from "@/courses/hooks";
+} from "@/having/courses/hooks";
 import CourseEditor from "@/components/admin/CourseEditor";
 import { ArrowLeftIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import toast from "react-hot-toast";
@@ -36,7 +36,7 @@ import type {
   CreateDocumentRequest,
   UpdateDocumentRequest,
   DocumentFormData,
-} from "@/courses";
+} from "@/having/courses";
 
 // Color palettes
 const COLORS = [

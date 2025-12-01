@@ -15,7 +15,7 @@ import UserLayout from '@/components/layout/UserLayout';
 import { dateUtils } from '@/lib/utils/common';
 import Image from 'next/image';
 import { Loader2Icon } from 'lucide-react';
-import { useDocumentsByTopic } from '@/courses';
+import { useDocumentsByTopic } from '@/having/courses';
 
 function TopicContent() {
   const params = useParams();

@@ -2,7 +2,7 @@
 
 'use client';
 
-import { usePublicTopics } from '@/courses/hooks';  
+import { usePublicTopics } from '@/having/courses/hooks';  
 import Link from 'next/link';
 import {
   AcademicCapIcon,

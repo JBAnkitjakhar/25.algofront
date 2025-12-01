@@ -15,11 +15,11 @@ import {
 } from '@heroicons/react/24/outline';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { StatCard } from '@/components/admin/StatCard';
-import { useAdminOverview } from '@/adminOverview/hooks';
-import { adminOverviewService } from '@/adminOverview/service';
+import { useAdminOverview } from '@/having/adminOverview/hooks';
+import { adminOverviewService } from '@/having/adminOverview/service';
 import { dateUtils } from '@/lib/utils/common';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import type { LoggedInUserToday } from '@/adminOverview/types';
+import type { LoggedInUserToday } from '@/having/adminOverview/types';
 import Image from 'next/image';
 
 // Pagination Component

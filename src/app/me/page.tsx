@@ -4,7 +4,7 @@
 
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import { useUserProgressStats, usePaginatedSolvedQuestions } from "@/userstats/hooks";
+import { useUserProgressStats, usePaginatedSolvedQuestions } from "@/having/userstats/hooks";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import UserLayout from "@/components/layout/UserLayout";
 import { roleUtils } from "@/lib/utils/auth";

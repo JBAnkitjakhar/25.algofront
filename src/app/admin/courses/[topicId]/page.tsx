@@ -10,7 +10,7 @@ import {
   useDeleteDocument,
   useAdminTopics,
   useUpdateDocument,
-} from "@/courses/hooks";
+} from "@/having/courses/hooks";
 import {
   DocumentTextIcon,
   PlusIcon,
@@ -24,7 +24,7 @@ import Link from "next/link";
 import { dateUtils } from "@/lib/utils/common";
 import { Loader2Icon } from "lucide-react";
 import toast from "react-hot-toast";
-import type { Document } from "@/courses";
+import type { Document } from "@/having/courses";
 
 export default function AdminTopicDocumentsPage() {
   const params = useParams();

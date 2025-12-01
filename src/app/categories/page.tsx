@@ -7,8 +7,8 @@ import { useRouter } from "next/navigation";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import UserLayout from "@/components/layout/UserLayout";
 import { FolderOpen, Search } from "lucide-react";
-import { useAllCategoriesWithProgress } from "@/userCategory/hooks";
-import type { CategoryWithUserProgress } from "@/userCategory/types";
+import { useAllCategoriesWithProgress } from "@/having/userCategory/hooks";
+import type { CategoryWithUserProgress } from "@/having/userCategory/types";
 
 function CategoryCard({ 
   category, 

@@ -11,7 +11,7 @@ import {
   useDeleteTopic,
   useToggleTopicVisibility,
   useCourseStats 
-} from '@/courses/hooks';
+} from '@/having/courses/hooks';
 import { 
   AcademicCapIcon,
   PlusIcon,
@@ -23,7 +23,7 @@ import {
   EyeSlashIcon
 } from '@heroicons/react/24/outline';
 import Link from 'next/link';
-import type { Topic, CreateTopicRequest } from '@/courses';
+import type { Topic, CreateTopicRequest } from '@/having/courses';
 import Image from 'next/image';
 import { Loader2Icon } from 'lucide-react';
 

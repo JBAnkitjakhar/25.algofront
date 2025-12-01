@@ -1,4 +1,4 @@
-// src/app/admin/questions/page.tsx - Questions management page
+// src/app/admin/questions/page.tsx
 
 "use client";
 

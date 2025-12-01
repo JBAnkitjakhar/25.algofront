@@ -39,7 +39,7 @@ import markdown from 'highlight.js/lib/languages/markdown';
 
 // Import the CSS for syntax highlighting
 import '@/components/admin/styles/CourseEditorHighlighting.css';
-import { useDocument } from '@/courses';
+import { useDocument } from '@/having/courses';
 
 // Register all languages
 hljs.registerLanguage('javascript', javascript);

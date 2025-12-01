@@ -16,10 +16,10 @@ import {
   ChevronRight,
   ChevronLeft
 } from 'lucide-react';
-import { useCategoryDetail, usePaginatedCategoryQuestions } from '@/userCategory/hooks';
+import { useCategoryDetail, usePaginatedCategoryQuestions } from '@/having/userCategory/hooks';
 import { QUESTION_LEVEL_LABELS, QUESTION_LEVEL_COLORS } from '@/constants';
 import { dateUtils } from '@/lib/utils/common';
-import type { QuestionWithSolvedStatus } from '@/userCategory/types';
+import type { QuestionWithSolvedStatus } from '@/having/userCategory/types';
 
 // Pagination component
 function Pagination({ 
