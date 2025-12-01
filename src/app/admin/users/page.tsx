@@ -2,13 +2,13 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
-import Image from 'next/image';
-import AdminLayout from '@/components/admin/AdminLayout';
-import RoleChangeModal from '@/components/admin/RoleChangeModal';
-import { 
-  UsersIcon, 
-  ShieldCheckIcon, 
+import { useState, useMemo } from "react";
+import Image from "next/image";
+import AdminLayout from "@/components/admin/AdminLayout";
+import RoleChangeModal from "@/components/admin/RoleChangeModal";
+import {
+  UsersIcon,
+  ShieldCheckIcon,
   UserIcon,
   ChevronUpDownIcon,
   ChevronLeftIcon,
@@ -16,12 +16,16 @@ import {
   FunnelIcon,
   MagnifyingGlassIcon,
   XMarkIcon,
-} from '@heroicons/react/24/outline';
-import { useUsers, useUsersByRole, useRolePermissions } from '@/hooks/useUserManagement';
-import { UserRole, UserListItem, User } from '@/types';
-import { dateUtils } from '@/lib/utils/common';
-import { roleUtils } from '@/lib/utils/auth';
-import { useAuth } from '@/hooks/useAuth';
+} from "@heroicons/react/24/outline";
+import {
+  useUsers,
+  useUsersByRole,
+  useRolePermissions,
+} from "@/hooks/useUserManagement";
+import { UserRole, UserListItem, User } from "@/types";
+import { dateUtils } from "@/lib/utils/common";
+import { roleUtils } from "@/lib/utils/auth";
+import { useAuth } from "@/hooks/useAuth";
 
 const roleIcons = {
   [UserRole.USER]: UserIcon,
@@ -30,9 +34,9 @@ const roleIcons = {
 };
 
 const roleColors = {
-  [UserRole.USER]: 'text-gray-600 bg-gray-100',
-  [UserRole.ADMIN]: 'text-blue-600 bg-blue-100',
-  [UserRole.SUPERADMIN]: 'text-purple-600 bg-purple-100',
+  [UserRole.USER]: "text-gray-600 bg-gray-100",
+  [UserRole.ADMIN]: "text-blue-600 bg-blue-100",
+  [UserRole.SUPERADMIN]: "text-purple-600 bg-purple-100",
 };
 
 // Define proper types for user stats
@@ -52,12 +56,12 @@ function SearchAndFilterBar({
 }: {
   searchQuery: string;
   onSearchChange: (query: string) => void;
-  selectedRole: UserRole | 'ALL';
-  onRoleFilter: (role: UserRole | 'ALL') => void;
+  selectedRole: UserRole | "ALL";
+  onRoleFilter: (role: UserRole | "ALL") => void;
   totalUsers?: number;
 }) {
-  const clearSearch = () => onSearchChange('');
-  const hasActiveFilters = searchQuery || selectedRole !== 'ALL';
+  const clearSearch = () => onSearchChange("");
+  const hasActiveFilters = searchQuery || selectedRole !== "ALL";
 
   return (
     <div className="bg-white p-4 rounded-lg shadow border border-gray-200 space-y-4 mb-6">
@@ -94,19 +98,28 @@ function SearchAndFilterBar({
       {/* Role Filter Buttons */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          <span className="text-sm font-medium text-gray-700">Filter by role:</span>
+          <span className="text-sm font-medium text-gray-700">
+            Filter by role:
+          </span>
           <div className="flex space-x-1">
-            {(['ALL', UserRole.USER, UserRole.ADMIN, UserRole.SUPERADMIN] as const).map((role) => (
+            {(
+              [
+                "ALL",
+                UserRole.USER,
+                UserRole.ADMIN,
+                UserRole.SUPERADMIN,
+              ] as const
+            ).map((role) => (
               <button
                 key={role}
                 onClick={() => onRoleFilter(role)}
                 className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
                   selectedRole === role
-                    ? 'bg-blue-100 text-blue-700 border border-blue-200'
-                    : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
+                    ? "bg-blue-100 text-blue-700 border border-blue-200"
+                    : "text-gray-500 hover:text-gray-700 hover:bg-gray-100"
                 }`}
               >
-                {role === 'ALL' ? 'All Users' : role}
+                {role === "ALL" ? "All Users" : role}
               </button>
             ))}
           </div>
@@ -134,11 +147,11 @@ function SearchAndFilterBar({
                 </button>
               </span>
             )}
-            {selectedRole !== 'ALL' && (
+            {selectedRole !== "ALL" && (
               <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
                 Role: {selectedRole}
                 <button
-                  onClick={() => onRoleFilter('ALL')}
+                  onClick={() => onRoleFilter("ALL")}
                   className="ml-1 inline-flex items-center justify-center w-4 h-4 text-purple-400 hover:text-purple-600"
                 >
                   <XMarkIcon className="w-3 h-3" />
@@ -148,8 +161,8 @@ function SearchAndFilterBar({
           </div>
           <button
             onClick={() => {
-              onSearchChange('');
-              onRoleFilter('ALL');
+              onSearchChange("");
+              onRoleFilter("ALL");
             }}
             className="text-sm text-blue-600 hover:text-blue-800 font-medium"
           >
@@ -161,12 +174,12 @@ function SearchAndFilterBar({
   );
 }
 
-function UserTable({ 
-  users, 
-  isLoading, 
+function UserTable({
+  users,
+  isLoading,
   onRoleChange,
   currentUser,
-  searchQuery
+  searchQuery,
 }: {
   users?: UserListItem[];
   isLoading: boolean;
@@ -200,12 +213,13 @@ function UserTable({
       <div className="bg-white shadow overflow-hidden sm:rounded-md">
         <div className="text-center py-12">
           <UsersIcon className="mx-auto h-12 w-12 text-gray-400" />
-          <h3 className="mt-2 text-sm font-medium text-gray-900">No users found</h3>
+          <h3 className="mt-2 text-sm font-medium text-gray-900">
+            No users found
+          </h3>
           <p className="mt-1 text-sm text-gray-500">
-            {searchQuery 
+            {searchQuery
               ? `No users match "${searchQuery}". Try adjusting your search.`
-              : "No users match your current filters."
-            }
+              : "No users match your current filters."}
           </p>
         </div>
       </div>
@@ -219,7 +233,7 @@ function UserTable({
           const Icon = roleIcons[user.role];
           const canChange = roleUtils.canChangeRole(currentUser, user);
           const isPrimary = user.primarySuperAdmin;
-          
+
           return (
             <li key={user.id}>
               <div className="px-4 py-4 flex items-center justify-between hover:bg-gray-50">
@@ -237,7 +251,7 @@ function UserTable({
                       <UserIcon className="h-6 w-6 text-gray-400" />
                     </div>
                   )}
-                  
+
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center space-x-2">
                       <p className="text-sm font-medium text-gray-900 truncate">
@@ -249,7 +263,9 @@ function UserTable({
                         </span>
                       )}
                     </div>
-                    <p className="text-sm text-gray-500 truncate">{user.email}</p>
+                    <p className="text-sm text-gray-500 truncate">
+                      {user.email}
+                    </p>
                     <p className="text-xs text-gray-400">
                       Joined {dateUtils.formatRelativeTime(user.createdAt)}
                     </p>
@@ -258,12 +274,16 @@ function UserTable({
 
                 <div className="flex items-center space-x-4">
                   <div className="flex items-center space-x-2">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${roleColors[user.role]}`}>
+                    <span
+                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        roleColors[user.role]
+                      }`}
+                    >
                       <Icon className="w-3 h-3 mr-1" />
                       {user.role}
                     </span>
                   </div>
-                  
+
                   {canChange ? (
                     <button
                       onClick={() => onRoleChange(user)}
@@ -289,28 +309,28 @@ function UserStats({ userRoles }: { userRoles?: UserStatsData }) {
 
   const stats = [
     {
-      label: 'Total Users',
+      label: "Total Users",
       value: userRoles.totalUsers,
       icon: UsersIcon,
-      color: 'text-gray-600',
+      color: "text-gray-600",
     },
     {
-      label: 'Regular Users',
+      label: "Regular Users",
       value: userRoles.users,
       icon: UserIcon,
-      color: 'text-green-600',
+      color: "text-green-600",
     },
     {
-      label: 'Admins',
+      label: "Admins",
       value: userRoles.admins,
       icon: ShieldCheckIcon,
-      color: 'text-blue-600',
+      color: "text-blue-600",
     },
     {
-      label: 'Super Admins',
+      label: "Super Admins",
       value: userRoles.superAdmins,
       icon: ChevronUpDownIcon,
-      color: 'text-purple-600',
+      color: "text-purple-600",
     },
   ];
 
@@ -319,7 +339,10 @@ function UserStats({ userRoles }: { userRoles?: UserStatsData }) {
       {stats.map((stat) => {
         const Icon = stat.icon;
         return (
-          <div key={stat.label} className="bg-white overflow-hidden shadow rounded-lg">
+          <div
+            key={stat.label}
+            className="bg-white overflow-hidden shadow rounded-lg"
+          >
             <div className="p-5">
               <div className="flex items-center">
                 <div className="flex-shrink-0">
@@ -347,8 +370,8 @@ function UserStats({ userRoles }: { userRoles?: UserStatsData }) {
 export default function AdminUsersPage() {
   const { user: currentUser, isSuperAdmin } = useAuth();
   const [currentPage, setCurrentPage] = useState(0);
-  const [selectedRole, setSelectedRole] = useState<UserRole | 'ALL'>('ALL');
-  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedRole, setSelectedRole] = useState<UserRole | "ALL">("ALL");
+  const [searchQuery, setSearchQuery] = useState("");
   const [selectedUser, setSelectedUser] = useState<UserListItem | null>(null);
   const [showRoleModal, setShowRoleModal] = useState(false);
 
@@ -359,16 +382,17 @@ export default function AdminUsersPage() {
   });
 
   // FIXED: Only call role-specific query when a specific role is selected
-  const filteredUsersQuery = useUsersByRole(
-    selectedRole as UserRole, 
-    {
-      page: currentPage,
-      size: 20,
-    }
-  );
+  const filteredUsersQuery = useUsersByRole(selectedRole as UserRole, {
+    page: currentPage,
+    size: 20,
+  });
 
   // FIXED: Properly choose the active query and disable the unused one
-  const { data: userPage, isLoading, error } = selectedRole === 'ALL' ? allUsersQuery : filteredUsersQuery;
+  const {
+    data: userPage,
+    isLoading,
+    error,
+  } = selectedRole === "ALL" ? allUsersQuery : filteredUsersQuery;
 
   // Get role permissions for info display
   const { data: permissions } = useRolePermissions();
@@ -376,24 +400,41 @@ export default function AdminUsersPage() {
   // Client-side search filtering
   const filteredUsers = useMemo(() => {
     const allUsers = userPage?.content || [];
-    
+
     if (!searchQuery.trim()) {
       return allUsers;
     }
-    
-    return allUsers.filter(user => 
-      user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+
+    const query = searchQuery.toLowerCase();
+
+    return allUsers.filter((user) => {
+      // Check name (always present)
+      const nameMatch = user.name.toLowerCase().includes(query);
+
+      // Check email (might be undefined for GitHub users with private emails)
+      const emailMatch = user.email
+        ? user.email.toLowerCase().includes(query)
+        : false;
+
+      // Also check GitHub username if available
+      const githubMatch = user.githubUsername
+        ? user.githubUsername.toLowerCase().includes(query)
+        : false;
+
+      return nameMatch || emailMatch || githubMatch;
+    });
   }, [userPage?.content, searchQuery]);
 
   // Calculate user stats from filtered results
-  const userStats: UserStatsData | undefined = userPage ? {
-    totalUsers: filteredUsers.length,
-    users: filteredUsers.filter(u => u.role === UserRole.USER).length,
-    admins: filteredUsers.filter(u => u.role === UserRole.ADMIN).length,
-    superAdmins: filteredUsers.filter(u => u.role === UserRole.SUPERADMIN).length,
-  } : undefined;
+  const userStats: UserStatsData | undefined = userPage
+    ? {
+        totalUsers: filteredUsers.length,
+        users: filteredUsers.filter((u) => u.role === UserRole.USER).length,
+        admins: filteredUsers.filter((u) => u.role === UserRole.ADMIN).length,
+        superAdmins: filteredUsers.filter((u) => u.role === UserRole.SUPERADMIN)
+          .length,
+      }
+    : undefined;
 
   const handleRoleChange = (user: UserListItem) => {
     setSelectedUser(user);
@@ -409,7 +450,7 @@ export default function AdminUsersPage() {
     setCurrentPage(page);
   };
 
-  const handleRoleFilter = (role: UserRole | 'ALL') => {
+  const handleRoleFilter = (role: UserRole | "ALL") => {
     setSelectedRole(role);
     setCurrentPage(0); // Reset to first page when filtering
   };
@@ -426,12 +467,26 @@ export default function AdminUsersPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center">
             <div className="mx-auto h-12 w-12 text-red-400">
-              <svg className="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 18.5c-.77.833.192 2.5 1.732 2.5z" />
+              <svg
+                className="h-12 w-12"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 18.5c-.77.833.192 2.5 1.732 2.5z"
+                />
               </svg>
             </div>
-            <h3 className="mt-2 text-sm font-medium text-gray-900">Access Denied</h3>
-            <p className="mt-1 text-sm text-gray-500">You need admin privileges to access user management.</p>
+            <h3 className="mt-2 text-sm font-medium text-gray-900">
+              Access Denied
+            </h3>
+            <p className="mt-1 text-sm text-gray-500">
+              You need admin privileges to access user management.
+            </p>
           </div>
         </div>
       </AdminLayout>
@@ -445,7 +500,9 @@ export default function AdminUsersPage() {
         <div className="mb-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">User Management</h1>
+              <h1 className="text-2xl font-bold text-gray-900">
+                User Management
+              </h1>
               <p className="mt-1 text-sm text-gray-500">
                 Manage user accounts and permissions across the platform.
               </p>
@@ -453,7 +510,8 @@ export default function AdminUsersPage() {
             {!isSuperAdmin() && (
               <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
                 <p className="text-yellow-800 text-sm">
-                  <strong>Note:</strong> Only Super Admins can modify user roles.
+                  <strong>Note:</strong> Only Super Admins can modify user
+                  roles.
                 </p>
               </div>
             )}
@@ -473,12 +531,13 @@ export default function AdminUsersPage() {
         />
 
         {/* Results Summary */}
-        {(searchQuery || selectedRole !== 'ALL') && (
+        {(searchQuery || selectedRole !== "ALL") && (
           <div className="mb-4">
             <div className="text-sm text-gray-600">
-              Showing {filteredUsers.length} result{filteredUsers.length !== 1 ? 's' : ''} 
+              Showing {filteredUsers.length} result
+              {filteredUsers.length !== 1 ? "s" : ""}
               {searchQuery && ` for "${searchQuery}"`}
-              {selectedRole !== 'ALL' && ` with role ${selectedRole}`}
+              {selectedRole !== "ALL" && ` with role ${selectedRole}`}
             </div>
           </div>
         )}
@@ -523,16 +582,14 @@ export default function AdminUsersPage() {
             <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
               <div>
                 <p className="text-sm text-gray-700">
-                  Showing{' '}
-                  <span className="font-medium">
-                    {currentPage * 20 + 1}
-                  </span>{' '}
-                  to{' '}
+                  Showing{" "}
+                  <span className="font-medium">{currentPage * 20 + 1}</span> to{" "}
                   <span className="font-medium">
                     {Math.min((currentPage + 1) * 20, userPage.totalElements)}
-                  </span>{' '}
-                  of{' '}
-                  <span className="font-medium">{userPage.totalElements}</span> results
+                  </span>{" "}
+                  of{" "}
+                  <span className="font-medium">{userPage.totalElements}</span>{" "}
+                  results
                 </p>
               </div>
               <div>
@@ -544,11 +601,11 @@ export default function AdminUsersPage() {
                   >
                     <ChevronLeftIcon className="h-5 w-5" />
                   </button>
-                  
+
                   <span className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
                     Page {currentPage + 1} of {userPage.totalPages}
                   </span>
-                  
+
                   <button
                     onClick={() => handlePageChange(currentPage + 1)}
                     disabled={userPage.last}
@@ -565,24 +622,36 @@ export default function AdminUsersPage() {
         {/* Role Permissions Info (for non-SuperAdmins) */}
         {!isSuperAdmin() && permissions && (
           <div className="mt-8 bg-gray-50 rounded-lg p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Role Permissions</h3>
+            <h3 className="text-lg font-medium text-gray-900 mb-4">
+              Role Permissions
+            </h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {Object.entries(permissions.permissions).map(([role, perms]) => (
                 <div key={role} className="bg-white rounded-lg p-4 border">
                   <div className="flex items-center mb-3">
                     {(() => {
                       const Icon = roleIcons[role as UserRole];
-                      return Icon ? <Icon className="h-5 w-5 mr-2 text-gray-600" /> : null;
+                      return Icon ? (
+                        <Icon className="h-5 w-5 mr-2 text-gray-600" />
+                      ) : null;
                     })()}
                     <h4 className="font-medium text-gray-900">{role}</h4>
                   </div>
                   <ul className="space-y-1">
-                    {Object.entries(perms as Record<string, boolean>).map(([perm, allowed]) => (
-                      <li key={perm} className="text-sm flex items-center">
-                        <span className={`w-2 h-2 rounded-full mr-2 ${allowed ? 'bg-green-400' : 'bg-red-400'}`} />
-                        {perm.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
-                      </li>
-                    ))}
+                    {Object.entries(perms as Record<string, boolean>).map(
+                      ([perm, allowed]) => (
+                        <li key={perm} className="text-sm flex items-center">
+                          <span
+                            className={`w-2 h-2 rounded-full mr-2 ${
+                              allowed ? "bg-green-400" : "bg-red-400"
+                            }`}
+                          />
+                          {perm
+                            .replace(/([A-Z])/g, " $1")
+                            .replace(/^./, (str) => str.toUpperCase())}
+                        </li>
+                      )
+                    )}
                   </ul>
                 </div>
               ))}

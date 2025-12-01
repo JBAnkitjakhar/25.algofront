@@ -8,6 +8,7 @@ export interface LoggedInUserToday {
   githubUsername: string | null;
   image: string | null;
   displayIdentifier: string;
+  lastLoginIST: string;
 }
 
 // System health status

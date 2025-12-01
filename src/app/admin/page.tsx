@@ -68,6 +68,17 @@ function LoggedInUsersTable({ users }: { users: LoggedInUserToday[] }) {
     currentPage
   );
 
+  // Helper function to format IST time
+  const formatLoginTime = (isoString: string) => {
+    const date = new Date(isoString);
+    return date.toLocaleTimeString('en-IN', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+      timeZone: 'Asia/Kolkata'
+    });
+  };
+
   return (
     <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
       <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4 flex items-center">
@@ -90,6 +101,9 @@ function LoggedInUsersTable({ users }: { users: LoggedInUserToday[] }) {
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                     Identifier
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                    Login Time (IST)
                   </th>
                 </tr>
               </thead>
@@ -121,6 +135,11 @@ function LoggedInUsersTable({ users }: { users: LoggedInUserToday[] }) {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className="text-sm text-gray-500 dark:text-gray-400">
                         {user.displayIdentifier}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="text-sm text-gray-900 dark:text-white font-medium">
+                        {formatLoginTime(user.lastLoginIST)}
                       </span>
                     </td>
                   </tr>
