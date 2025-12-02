@@ -137,29 +137,6 @@ export const FILE_ENDPOINTS = {
     `${API_BASE_URL}/files/solutions/${solutionId}/visualizers`,
 } as const;
 
-// // Courses endpoints
-// export const COURSES_ENDPOINTS = {          
-//   // Admin endpoints
-//   CREATE_TOPIC: `${API_BASE_URL}/courses/topics`,
-//   UPDATE_TOPIC: (topicId: string) =>
-//     `${API_BASE_URL}/courses/topics/${topicId}`,
-//   DELETE_TOPIC: (topicId: string) =>
-//     `${API_BASE_URL}/courses/topics/${topicId}`,
-//   CREATE_DOC: `${API_BASE_URL}/courses/docs`,
-//   UPDATE_DOC: (docId: string) => `${API_BASE_URL}/courses/docs/${docId}`,
-//   DELETE_DOC: (docId: string) => `${API_BASE_URL}/courses/docs/${docId}`,
-//   UPLOAD_IMAGE: `${API_BASE_URL}/courses/images`,
-//   DELETE_IMAGE: `${API_BASE_URL}/courses/images`,
-//   IMAGE_CONFIG: `${API_BASE_URL}/courses/images/config`,
-//   // User endpoints
-//   GET_ALL_TOPICS: `${API_BASE_URL}/courses/topics`,
-//   GET_TOPIC: (topicId: string) => `${API_BASE_URL}/courses/topics/${topicId}`,
-//   GET_DOCS_BY_TOPIC: (topicId: string) =>
-//     `${API_BASE_URL}/courses/topics/${topicId}/docs`,
-//   GET_DOC: (docId: string) => `${API_BASE_URL}/courses/docs/${docId}`,
-//   STATS: `${API_BASE_URL}/courses/stats`,
-// } as const;
-
 // Routes
 export const ROUTES = {
   HOME: "/",

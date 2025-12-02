@@ -1,5 +1,3 @@
-// src/having/adminquestions/components/QuestionEditorSidebar.tsx
-
 "use client";
 
 import { Editor } from '@tiptap/react';
@@ -28,7 +26,6 @@ import { useUploadQuestionImage } from '../hooks';
 import toast from 'react-hot-toast';
 import { PROGRAMMING_LANGUAGES, QUESTION_VALIDATION } from '../constants';
 
-// Color palettes
 const COLORS = [
   "#000000", "#FF0000", "#00FF00", "#0000FF", "#FFFF00",
   "#FF00FF", "#00FFFF", "#FFA500", "#800080", "#FFC0CB",
@@ -42,9 +39,13 @@ const HIGHLIGHT_COLORS = [
 
 interface QuestionEditorSidebarProps {
   editor: Editor | null;
+  onImageUpload?: (imageUrl: string) => void; // ✅ NEW
 }
 
-export function QuestionEditorSidebar({ editor }: QuestionEditorSidebarProps) {
+export function QuestionEditorSidebar({ 
+  editor,
+  onImageUpload // ✅ NEW
+}: QuestionEditorSidebarProps) {
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [showTextColorPicker, setShowTextColorPicker] = useState(false);
   const [showHighlightColorPicker, setShowHighlightColorPicker] = useState(false);
@@ -63,7 +64,6 @@ export function QuestionEditorSidebar({ editor }: QuestionEditorSidebarProps) {
       return;
     }
 
-    // Validate image size against backend limit
     if (file.size > QUESTION_VALIDATION.MAX_IMAGE_SIZE) {
       toast.error(`Image size must be less than ${QUESTION_VALIDATION.MAX_IMAGE_SIZE / (1024 * 1024)}MB`);
       return;
@@ -74,6 +74,12 @@ export function QuestionEditorSidebar({ editor }: QuestionEditorSidebarProps) {
       const result = await uploadImageMutation.mutateAsync(file);
       if (result.secure_url && editor) {
         editor.chain().focus().setImage({ src: result.secure_url }).run();
+        
+        // ✅ Notify parent component
+        if (onImageUpload) {
+          onImageUpload(result.secure_url);
+        }
+        
         toast.success('Image uploaded and inserted');
       }
     } catch (error) {

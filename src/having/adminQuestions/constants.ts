@@ -32,10 +32,11 @@ export const QUESTION_VALIDATION = {
   TITLE_MIN_LENGTH: 5,
   TITLE_MAX_LENGTH: 200,
   STATEMENT_MIN_LENGTH: 20,
-  STATEMENT_MAX_LENGTH: 10 * 1024 * 1024, // 10MB in bytes
-  MAX_IMAGES_PER_QUESTION: 5, // From backend config
+  STATEMENT_MAX_LENGTH: 15000, // ✅ 15k characters  
+  MAX_IMAGES_PER_QUESTION: 5,
   MAX_IMAGE_SIZE: 2 * 1024 * 1024, // 2MB per image
   MAX_CODE_SNIPPETS: 10,
+  CODE_SNIPPET_MAX_LENGTH: 2000, // ✅ NEW: 2k chars per template
 } as const;
 
 export const PROGRAMMING_LANGUAGES = [

@@ -144,7 +144,7 @@ class AdminQuestionsService {
   async uploadImage(file: File): Promise<ApiResponse<ImageUploadResponse>> {
     try {
       const formData = new FormData();
-      formData.append("file", file);
+      formData.append("image", file);
 
       return await apiClient.post<ImageUploadResponse>(
         ADMIN_QUESTIONS_ENDPOINTS.UPLOAD_IMAGE,

@@ -1,5 +1,3 @@
-// src/app/admin/questions/new/page.tsx
-
 "use client";
 
 import { useState } from "react";
@@ -10,11 +8,8 @@ import {
   useCreateQuestion,
   useCategoriesMetadata,
 } from "@/having/adminQuestions/hooks";
-import {
-  QUESTION_VALIDATION,
-  ADMIN_ROUTES,
-  QUESTION_LEVEL_LABELS,
-} from "@/constants";
+import { ADMIN_ROUTES, QUESTION_LEVEL_LABELS } from "@/constants";
+import { QUESTION_VALIDATION } from "@/having/adminQuestions/constants";
 import type {
   CreateQuestionRequest,
   QuestionLevel,
@@ -25,9 +20,14 @@ import {
   Loader2Icon,
   HelpCircleIcon,
   AlertTriangleIcon,
+  XIcon,
+  ImageIcon,
 } from "lucide-react";
 import { QuestionEditorSidebar } from "@/having/adminQuestions/components/QuestionEditorSidebar";
 import { CodeSnippetsManager } from "@/having/adminQuestions/components";
+import toast from "react-hot-toast";
+import axios from "axios";
+import Image from "next/image";
 
 export default function CreateQuestionPage() {
   const router = useRouter();
@@ -42,11 +42,87 @@ export default function CreateQuestionPage() {
     codeSnippets: [],
   });
   const [errors, setErrors] = useState<string[]>([]);
-  const [statementSize, setStatementSize] = useState(0);
+  const [statementCharCount, setStatementCharCount] = useState(0);
+  const [isDeletingImage, setIsDeletingImage] = useState<string | null>(null);
 
   const { data: categories, isLoading: categoriesLoading } =
     useCategoriesMetadata();
   const createQuestionMutation = useCreateQuestion();
+
+  // ✅ Extract images from HTML statement
+  const extractImagesFromStatement = (htmlContent: string): string[] => {
+    if (typeof window === "undefined") return [];
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(htmlContent, "text/html");
+    const images = doc.querySelectorAll("img");
+    return Array.from(images).map((img) => img.src);
+  };
+
+  // ✅ Handle image upload callback
+  const handleImageUpload = (imageUrl: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      imageUrls: [...(prev.imageUrls || []), imageUrl],
+    }));
+  };
+
+  // ✅ Delete image from Cloudinary and remove from statement
+  const handleDeleteImage = async (imageUrl: string) => {
+    if (
+      !confirm(
+        "Delete this image? It will be removed from Cloudinary immediately."
+      )
+    ) {
+      return;
+    }
+
+    setIsDeletingImage(imageUrl);
+
+    try {
+      // Extract public_id from Cloudinary URL
+      const urlParts = imageUrl.split("/");
+      const publicIdWithExtension = urlParts[urlParts.length - 1];
+      const publicId = publicIdWithExtension.split(".")[0];
+      const folder = "algoarena/questions";
+      const fullPublicId = `${folder}/${publicId}`;
+
+      // Delete from Cloudinary
+      await axios.delete(
+        `/api/files/images?publicId=${encodeURIComponent(fullPublicId)}`
+      );
+
+      // Remove from imageUrls array
+      setFormData((prev) => ({
+        ...prev,
+        imageUrls: (prev.imageUrls || []).filter((url) => url !== imageUrl),
+      }));
+
+      // Remove from editor HTML
+      if (editor) {
+        const currentHtml = editor.getHTML();
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(currentHtml, "text/html");
+        const images = doc.querySelectorAll("img");
+
+        images.forEach((img) => {
+          if (img.src === imageUrl) {
+            img.remove();
+          }
+        });
+
+        const updatedHtml = doc.body.innerHTML;
+        editor.commands.setContent(updatedHtml);
+        setFormData((prev) => ({ ...prev, statement: updatedHtml }));
+      }
+
+      toast.success("Image deleted successfully");
+    } catch (error) {
+      console.error("Delete failed:", error);
+      toast.error("Failed to delete image from Cloudinary");
+    } finally {
+      setIsDeletingImage(null);
+    }
+  };
 
   const validateForm = (): string[] => {
     const errors: string[] = [];
@@ -69,19 +145,18 @@ export default function CreateQuestionPage() {
     if (!formData.statement.trim()) {
       errors.push("Question statement is required");
     } else {
-      const size = new Blob([formData.statement]).size;
-      setStatementSize(size);
+      const charCount = formData.statement.trim().length;
+      setStatementCharCount(charCount);
 
-      if (
-        formData.statement.trim().length <
-        QUESTION_VALIDATION.STATEMENT_MIN_LENGTH
-      ) {
+      if (charCount < QUESTION_VALIDATION.STATEMENT_MIN_LENGTH) {
         errors.push(
           `Statement must be at least ${QUESTION_VALIDATION.STATEMENT_MIN_LENGTH} characters`
         );
       }
-      if (size > QUESTION_VALIDATION.STATEMENT_MAX_LENGTH) {
-        errors.push(`Statement size exceeds maximum allowed`);
+      if (charCount > QUESTION_VALIDATION.STATEMENT_MAX_LENGTH) {
+        errors.push(
+          `Statement must be less than ${QUESTION_VALIDATION.STATEMENT_MAX_LENGTH} characters`
+        );
       }
     }
 
@@ -93,11 +168,30 @@ export default function CreateQuestionPage() {
       errors.push("Display order must be at least 1");
     }
 
+    if (formData.codeSnippets && formData.codeSnippets.length > 0) {
+      formData.codeSnippets.forEach((snippet, index) => {
+        if (snippet.code.length > QUESTION_VALIDATION.CODE_SNIPPET_MAX_LENGTH) {
+          errors.push(
+            `Code template ${index + 1} exceeds ${
+              QUESTION_VALIDATION.CODE_SNIPPET_MAX_LENGTH
+            } characters`
+          );
+        }
+      });
+    }
+
     return errors;
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    // ✅ Sync imageUrls with actual images in statement
+    const imagesInStatement = extractImagesFromStatement(formData.statement);
+    const updatedFormData = {
+      ...formData,
+      imageUrls: imagesInStatement,
+    };
 
     const validationErrors = validateForm();
     if (validationErrors.length > 0) {
@@ -106,7 +200,7 @@ export default function CreateQuestionPage() {
     }
 
     setErrors([]);
-    createQuestionMutation.mutate(formData, {
+    createQuestionMutation.mutate(updatedFormData, {
       onSuccess: () => {
         router.push(ADMIN_ROUTES.QUESTIONS);
       },
@@ -120,25 +214,22 @@ export default function CreateQuestionPage() {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const formatSize = (bytes: number): string => {
-    if (bytes === 0) return "0 KB";
-    if (bytes < 1024) return `${bytes} B`;
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-    return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
-  };
+  const isOverLimit =
+    statementCharCount > QUESTION_VALIDATION.STATEMENT_MAX_LENGTH;
+  const isWarning =
+    statementCharCount > QUESTION_VALIDATION.STATEMENT_MAX_LENGTH * 0.8;
 
-  const isOverSize = statementSize > QUESTION_VALIDATION.STATEMENT_MAX_LENGTH;
-  const isWarningSize =
-    statementSize > QUESTION_VALIDATION.STATEMENT_MAX_LENGTH * 0.8;
+  // ✅ Get current images from statement
+  const currentImages = extractImagesFromStatement(formData.statement);
 
   return (
     <div className="min-h-screen bg-white flex">
-      {/* Left Sidebar - Editor Tools */}
-      <QuestionEditorSidebar editor={editor} />
+      <QuestionEditorSidebar
+        editor={editor}
+        onImageUpload={handleImageUpload}
+      />
 
-      {/* Main Content Area */}
       <div className="flex-1 max-w-5xl mx-auto px-6 py-8 overflow-y-auto">
-        {/* Back Button */}
         <button
           onClick={() => router.push(ADMIN_ROUTES.QUESTIONS)}
           className="flex items-center text-gray-700 hover:text-gray-900 font-medium transition-colors mb-6"
@@ -264,7 +355,7 @@ export default function CreateQuestionPage() {
               content={formData.statement}
               onChange={(content) => {
                 updateFormData("statement", content);
-                setStatementSize(new Blob([content]).size);
+                setStatementCharCount(content.trim().length);
               }}
               onEditorReady={setEditor}
             />
@@ -280,17 +371,73 @@ export default function CreateQuestionPage() {
               onChange={(snippets) => updateFormData("codeSnippets", snippets)}
             />
           </div>
+
+          {/* ✅ Uploaded Images Section */}
+          {currentImages.length > 0 && (
+            <div className="bg-white border border-gray-200 rounded-lg p-6">
+              <div className="flex items-center justify-between mb-3">
+                <label className="block text-sm font-medium text-gray-700">
+                  Uploaded Images ({currentImages.length}/
+                  {QUESTION_VALIDATION.MAX_IMAGES_PER_QUESTION})
+                </label>
+                <span className="text-xs text-gray-500">
+                  Click X to delete from Cloudinary
+                </span>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {currentImages.map((imageUrl, index) => (
+                  <div
+                    key={index}
+                    className="relative group border border-gray-200 rounded-lg overflow-hidden"
+                  >
+                    <Image
+                      src={imageUrl}
+                      alt={`Uploaded ${index + 1}`}
+                      width={300} // Standard width for grid
+                      height={200} // Standard height (3:2 aspect ratio)
+                      className="w-full h-32 object-cover"
+                      unoptimized // Required for external Cloudinary URLs
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteImage(imageUrl)}
+                      disabled={isDeletingImage === imageUrl}
+                      className="absolute top-2 right-2 p-1.5 bg-red-600 text-white rounded-full hover:bg-red-700 opacity-0 group-hover:opacity-100 transition-all disabled:opacity-50"
+                      title="Delete from Cloudinary"
+                    >
+                      {isDeletingImage === imageUrl ? (
+                        <Loader2Icon className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <XIcon className="w-4 h-4" />
+                      )}
+                    </button>
+                    <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-xs p-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="flex items-center justify-center gap-1">
+                        <ImageIcon className="w-3 h-3" />
+                        <span className="truncate">Image {index + 1}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {currentImages.length >=
+                QUESTION_VALIDATION.MAX_IMAGES_PER_QUESTION && (
+                <p className="text-xs text-orange-600 mt-2">
+                  Maximum image limit reached
+                </p>
+              )}
+            </div>
+          )}
         </form>
       </div>
 
-      {/* Right Sidebar - Actions & Info */}
+      {/* Right Sidebar */}
       <div className="w-72 border-l border-gray-200 bg-gray-50 flex-shrink-0">
         <div className="sticky top-0 p-4 space-y-4 max-h-screen overflow-y-auto">
-          {/* Action Buttons */}
           <div className="space-y-2">
             <button
               onClick={handleSubmit}
-              disabled={createQuestionMutation.isPending || isOverSize}
+              disabled={createQuestionMutation.isPending || isOverLimit}
               className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
             >
               {createQuestionMutation.isPending ? (
@@ -313,59 +460,60 @@ export default function CreateQuestionPage() {
             </button>
           </div>
 
-          {/* Statement Size */}
+          {/* Statement Character Count */}
           <div
             className={`p-4 rounded-lg border-2 transition-all ${
-              isOverSize
+              isOverLimit
                 ? "bg-red-50 border-red-500"
-                : isWarningSize
+                : isWarning
                 ? "bg-yellow-50 border-yellow-400"
                 : "bg-blue-50 border-blue-300"
             }`}
           >
             <div className="flex items-start space-x-2 mb-2">
-              {isOverSize && (
+              {isOverLimit && (
                 <AlertTriangleIcon className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
               )}
               <div className="flex-1">
                 <h3
                   className={`font-semibold text-sm mb-1 ${
-                    isOverSize
+                    isOverLimit
                       ? "text-red-900"
-                      : isWarningSize
+                      : isWarning
                       ? "text-yellow-900"
                       : "text-blue-900"
                   }`}
                 >
-                  📊 Statement Size
+                  📊 Statement Length
                 </h3>
                 <div
                   className={`space-y-1 text-xs ${
-                    isOverSize
+                    isOverLimit
                       ? "text-red-700"
-                      : isWarningSize
+                      : isWarning
                       ? "text-yellow-700"
                       : "text-blue-700"
                   }`}
                 >
                   <div className="flex justify-between">
-                    <span>Current:</span>
+                    <span>Characters:</span>
                     <span className="font-semibold">
-                      {formatSize(statementSize)}
+                      {statementCharCount.toLocaleString()} /{" "}
+                      {QUESTION_VALIDATION.STATEMENT_MAX_LENGTH.toLocaleString()}
                     </span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
                     <div
                       className={`h-2 rounded-full transition-all ${
-                        isOverSize
+                        isOverLimit
                           ? "bg-red-600"
-                          : isWarningSize
+                          : isWarning
                           ? "bg-yellow-500"
                           : "bg-blue-600"
                       }`}
                       style={{
                         width: `${Math.min(
-                          (statementSize /
+                          (statementCharCount /
                             QUESTION_VALIDATION.STATEMENT_MAX_LENGTH) *
                             100,
                           100
@@ -378,7 +526,6 @@ export default function CreateQuestionPage() {
             </div>
           </div>
 
-          {/* Errors */}
           {errors.length > 0 && (
             <div className="bg-red-50 border border-red-200 rounded-lg p-4">
               <h3 className="font-semibold text-sm text-red-900 mb-2">
@@ -413,14 +560,9 @@ export default function CreateQuestionPage() {
             <div className="p-3 bg-white rounded-lg border border-gray-200">
               <h3 className="font-semibold text-gray-900 mb-1">🖼️ Images</h3>
               <ul className="space-y-1 text-xs text-gray-600">
-                <li>
-                  • <strong>Max 2MB per image</strong>
-                </li>
-                <li>
-                  • <strong>Max 5 images per question</strong>
-                </li>
-                <li>• Auto-centered display</li>
-                <li>• Use left sidebar button</li>
+                <li>• Max 2MB per image</li>
+                <li>• Max 5 images per question</li>
+                <li>• Delete removes from Cloudinary</li>
               </ul>
             </div>
 
@@ -429,9 +571,9 @@ export default function CreateQuestionPage() {
                 💻 Code Templates
               </h3>
               <ul className="space-y-1 text-xs text-gray-600">
-                <li>• Add starter code for users</li>
+                <li>• Max 2k chars per template</li>
                 <li>• Multiple languages supported</li>
-                <li>• Max 10 templates per question</li>
+                <li>• Max 10 templates total</li>
               </ul>
             </div>
 
@@ -439,9 +581,9 @@ export default function CreateQuestionPage() {
               <h3 className="font-semibold text-gray-900 mb-1">📊 Limits</h3>
               <ul className="space-y-1 text-xs text-gray-600">
                 <li>• Title: Max 200 characters</li>
-                <li>• Statement: Max 10MB</li>
+                <li>• Statement: Max 15k characters</li>
                 <li>• Images: 5 max, 2MB each</li>
-                <li>• Code snippets: Max 10</li>
+                <li>• Code: Max 10 templates, 2k each</li>
               </ul>
             </div>
           </div>
