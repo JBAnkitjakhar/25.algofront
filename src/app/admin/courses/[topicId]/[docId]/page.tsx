@@ -426,42 +426,6 @@ export default function AdminDocumentEditPage() {
               </div>
             </div>
 
-            {/* Headings */}
-            {/* <div className="space-y-2 pt-2 border-t border-gray-200">
-              <p className="text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                Headings
-              </p>
-              <div className="flex flex-col gap-1">
-                <button
-                  onClick={() => editorInstance?.chain().focus().toggleHeading({ level: 1 }).run()}
-                  className={`flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-colors ${
-                    editorInstance?.isActive('heading', { level: 1 }) ? 'bg-blue-100 text-blue-700' : 'hover:bg-gray-100 text-gray-700'
-                  }`}
-                >
-                  <Heading1 className="w-4 h-4" />
-                  <span>Heading 1</span>
-                </button>
-                <button
-                  onClick={() => editorInstance?.chain().focus().toggleHeading({ level: 2 }).run()}
-                  className={`flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-colors ${
-                    editorInstance?.isActive('heading', { level: 2 }) ? 'bg-blue-100 text-blue-700' : 'hover:bg-gray-100 text-gray-700'
-                  }`}
-                >
-                  <Heading2 className="w-4 h-4" />
-                  <span>Heading 2</span>
-                </button>
-                <button
-                  onClick={() => editorInstance?.chain().focus().toggleHeading({ level: 3 }).run()}
-                  className={`flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-colors ${
-                    editorInstance?.isActive('heading', { level: 3 }) ? 'bg-blue-100 text-blue-700' : 'hover:bg-gray-100 text-gray-700'
-                  }`}
-                >
-                  <Heading3 className="w-4 h-4" />
-                  <span>Heading 3</span>
-                </button>
-              </div>
-            </div> */}
-
             {/* Colors */}
             <div className="space-y-2 pt-2 border-t border-gray-200">
               <p className="text-xs font-semibold text-gray-700 uppercase tracking-wider">
@@ -857,7 +821,7 @@ export default function AdminDocumentEditPage() {
                   </div>
                   <div className="flex justify-between">
                     <span>Max Limit:</span>
-                    <span className="font-semibold">5.0 MB</span>
+                    <span className="font-semibold">10 MB</span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
                     <div

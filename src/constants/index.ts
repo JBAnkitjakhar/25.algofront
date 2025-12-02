@@ -138,7 +138,7 @@ export const FILE_ENDPOINTS = {
 } as const;
 
 // // Courses endpoints
-// export const COURSES_ENDPOINTS = {
+// export const COURSES_ENDPOINTS = {          
 //   // Admin endpoints
 //   CREATE_TOPIC: `${API_BASE_URL}/courses/topics`,
 //   UPDATE_TOPIC: (topicId: string) =>
