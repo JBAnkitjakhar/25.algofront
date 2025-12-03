@@ -13,6 +13,7 @@ export type {
   UpdateTopicRequest,
   CreateDocumentRequest,
   UpdateDocumentRequest,
+  MoveDocumentRequest,
   DocumentFormData,
   CourseImageUploadResponse,
   CourseImageConfig,

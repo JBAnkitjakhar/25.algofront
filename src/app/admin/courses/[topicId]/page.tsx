@@ -9,7 +9,7 @@ import {
   useDocumentsByTopic,
   useDeleteDocument,
   useAdminTopics,
-  useUpdateDocument,
+  useMoveDocument, // ✅ CHANGED: Import useMoveDocument instead of useUpdateDocument
 } from "@/having/courses/hooks";
 import {
   DocumentTextIcon,
@@ -35,7 +35,7 @@ export default function AdminTopicDocumentsPage() {
     useDocumentsByTopic(topicId);
   const { data: allTopicsData } = useAdminTopics();
   const deleteDocumentMutation = useDeleteDocument();
-  const updateDocumentMutation = useUpdateDocument();
+  const moveDocumentMutation = useMoveDocument(); // ✅ CHANGED: Use useMoveDocument
 
   const documents = docsData?.docs || [];
   const allTopics = allTopicsData?.data || [];
@@ -55,6 +55,7 @@ export default function AdminTopicDocumentsPage() {
     }
   };
 
+  // ✅ CHANGED: Simplified move handler using dedicated API
   const handleMoveDocument = async () => {
     if (!movingDoc || !selectedTargetTopic) return;
 
@@ -64,21 +65,16 @@ export default function AdminTopicDocumentsPage() {
     }
 
     try {
-      await updateDocumentMutation.mutateAsync({
+      await moveDocumentMutation.mutateAsync({
         docId: movingDoc.id,
-        data: {
-          title: movingDoc.title, // Include the existing title
-          topicId: selectedTargetTopic, // New topic ID
-          displayOrder: movingDoc.displayOrder, // Keep existing order
-          content: movingDoc.content || "", // Include existing content
-          imageUrls: movingDoc.imageUrls || [], // Include existing images
-        },
+        newTopicId: selectedTargetTopic,
+        oldTopicId: topicId, // Pass current topic ID for cache invalidation
       });
       setMovingDoc(null);
       setSelectedTargetTopic("");
-      toast.success("Document moved successfully");
     } catch (error) {
       console.error("Failed to move document:", error);
+      // Error toast is already handled in the hook
     }
   };
 
@@ -213,11 +209,11 @@ export default function AdminTopicDocumentsPage() {
                 <button
                   onClick={handleMoveDocument}
                   disabled={
-                    !selectedTargetTopic || updateDocumentMutation.isPending
+                    !selectedTargetTopic || moveDocumentMutation.isPending
                   }
                   className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
                 >
-                  {updateDocumentMutation.isPending ? (
+                  {moveDocumentMutation.isPending ? (
                     <Loader2Icon className="w-5 h-5 animate-spin" />
                   ) : (
                     "Move Document"

@@ -14,6 +14,7 @@ import type {
   CourseStats,
   TopicsListResponse,
   DocsByTopicResponse,
+  MoveDocumentRequest,
 } from "./types";
 import { COURSES_ENDPOINTS } from "./constants";
 import { API_BASE_URL } from "@/constants";
@@ -46,7 +47,7 @@ class CoursesService {
     };
   }
 
-  //update topic     
+  //update topic
   async updateTopic(
     topicId: string,
     data: UpdateTopicRequest
@@ -444,6 +445,35 @@ class CoursesService {
       success: false,
       error: "Fetch failed",
       message: "Failed to fetch statistics",
+    };
+  }
+
+  async moveDocument(
+    docId: string,
+    data: MoveDocumentRequest
+  ): Promise<ApiResponse<Document>> {
+    const response = await apiClient.put<{
+      data: Document;
+      success: boolean;
+      message: string;
+    }>(COURSES_ENDPOINTS.MOVE_DOC(docId), data);
+
+    if (response.success && response.data && response.data.success) {
+      return { success: true, data: response.data.data };
+    }
+
+    if (!response.success) {
+      return {
+        success: false,
+        error: response.error || "Move failed",
+        message: response.message || "Failed to move document",
+      };
+    }
+
+    return {
+      success: false,
+      error: "Move failed",
+      message: response.data?.message || "Failed to move document",
     };
   }
 }

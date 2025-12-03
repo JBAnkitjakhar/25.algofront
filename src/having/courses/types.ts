@@ -110,3 +110,7 @@ export interface DocsByTopicResponse {
   count: number;
   topic: Topic;
 }
+
+export interface MoveDocumentRequest {
+  newTopicId: string;
+}

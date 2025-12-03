@@ -11,6 +11,7 @@ export const COURSES_ENDPOINTS = {
   CREATE_DOC: '/courses/docs',
   UPDATE_DOC: (docId: string) => `/courses/docs/${docId}`,
   DELETE_DOC: (docId: string) => `/courses/docs/${docId}`,
+  MOVE_DOC: (docId: string) => `/courses/docs/${docId}/move`,  
   
   UPLOAD_IMAGE: '/courses/images',
   DELETE_IMAGE: '/courses/images',

@@ -82,8 +82,7 @@ export function useUpdateTopic() {
       // Also invalidate docs that might display topic name
       queryClient.invalidateQueries({
         predicate: (query) =>
-          query.queryKey[0] === 'courses' && 
-          query.queryKey[1] === 'docs'
+          query.queryKey[0] === "courses" && query.queryKey[1] === "docs",
       });
       toast.success("Topic updated successfully");
     },
@@ -92,41 +91,6 @@ export function useUpdateTopic() {
     },
   });
 }
-
-// export function useUpdateTopic() {
-//   const queryClient = useQueryClient();
-
-//   return useMutation({
-//     mutationFn: async ({
-//       topicId,
-//       data,
-//     }: {
-//       topicId: string;
-//       data: UpdateTopicRequest;
-//     }) => {
-//       const response = await coursesService.updateTopic(topicId, data);
-//       if (response.success && response.data) {
-//         return response.data;
-//       }
-//       throw new Error(response.message || "Failed to update topic");
-//     },
-//     onSuccess: (data, variables) => {
-//       queryClient.invalidateQueries({
-//         queryKey: COURSES_QUERY_KEYS.ADMIN_TOPICS_LIST,
-//       });
-//       queryClient.invalidateQueries({
-//         queryKey: COURSES_QUERY_KEYS.PUBLIC_TOPICS_LIST,
-//       });
-//       queryClient.invalidateQueries({
-//         queryKey: COURSES_QUERY_KEYS.TOPIC_DETAIL(variables.topicId),
-//       });
-//       toast.success("Topic updated successfully");
-//     },
-//     onError: (error: Error) => {
-//       toast.error(error.message);
-//     },
-//   });
-// }
 
 export function useToggleTopicVisibility() {
   const queryClient = useQueryClient();
@@ -359,16 +323,16 @@ export function usePublicTopics() {
     // ✅ Long stale time - topics list doesn't change often
     staleTime: 20 * 60 * 1000, // 20 minutes
     gcTime: 30 * 60 * 1000, // Keep in cache for 30 mins
-    
+
     // ✅ Refetch on page refresh (component mount)
     refetchOnMount: true,
-    
+
     // ❌ Don't refetch on tab switch
     refetchOnWindowFocus: false,
-    
+
     // ❌ Don't refetch on network reconnect
     refetchOnReconnect: false,
-    
+
     // ❌ No background polling
     refetchInterval: false,
     refetchIntervalInBackground: false,
@@ -386,20 +350,20 @@ export function useDocumentsByTopic(topicId: string) {
       throw new Error(response.message || "Failed to fetch documents");
     },
     enabled: !!topicId,
-    
+
     // ✅ Long stale time - docs list doesn't change often
     staleTime: 20 * 60 * 1000, // 20 minutes
     gcTime: 30 * 60 * 1000, // Keep in cache for 30 mins
-    
+
     // ✅ Refetch on page refresh
     refetchOnMount: true,
-    
+
     // ❌ Don't refetch on tab switch
     refetchOnWindowFocus: false,
-    
+
     // ❌ Don't refetch on network reconnect
     refetchOnReconnect: false,
-    
+
     // ❌ No background polling
     refetchInterval: false,
     refetchIntervalInBackground: false,
@@ -417,38 +381,73 @@ export function useDocument(docId: string) {
       throw new Error(response.message || "Failed to fetch document");
     },
     enabled: !!docId,
-    
+
     // ✅ Longest stale time - full document content rarely changes
     staleTime: 20 * 60 * 1000, // 20 minutes
     gcTime: 30 * 60 * 1000, // Keep in cache for 30 mins
-    
+
     // ✅ Refetch on page refresh
     refetchOnMount: true,
-    
+
     // ❌ Don't refetch on tab switch
     refetchOnWindowFocus: false,
-    
+
     // ❌ Don't refetch on network reconnect
     refetchOnReconnect: false,
-    
+
     // ❌ No background polling
     refetchInterval: false,
     refetchIntervalInBackground: false,
   });
 }
-// ```
 
-// ---
+export function useMoveDocument() {
+  const queryClient = useQueryClient();
 
-// ## 📊 Summary of Changes
+  return useMutation({
+    mutationFn: async ({
+      docId,
+      newTopicId,
+      oldTopicId,
+    }: {
+      docId: string;
+      newTopicId: string;
+      oldTopicId: string; // Need this to invalidate old topic's cache
+    }) => {
+      const response = await coursesService.moveDocument(docId, { newTopicId });
+      if (response.success && response.data) {
+        return { ...response.data, oldTopicId }; // Include oldTopicId in response
+      }
+      throw new Error(response.message || "Failed to move document");
+    },
+    onSuccess: (data, variables) => {
+      // ✅ Invalidate BOTH old and new topic's document lists
+      queryClient.invalidateQueries({
+        queryKey: COURSES_QUERY_KEYS.DOCS_BY_TOPIC(variables.oldTopicId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: COURSES_QUERY_KEYS.DOCS_BY_TOPIC(variables.newTopicId),
+      });
 
-// ### **Kept (3 User Hooks):**
-// 1. ✅ `usePublicTopics()` - Topics list with metadata
-// 2. ✅ `useDocumentsByTopic()` - Docs list + topic details
-// 3. ✅ `useDocument()` - Full document content
+      // ✅ Invalidate the document detail cache
+      queryClient.invalidateQueries({
+        queryKey: COURSES_QUERY_KEYS.DOC_DETAIL(variables.docId),
+      });
 
-// First visit → Fetch from backend → Cache for 20 mins
-// Navigate within site → Use cache (instant)
-// After 20 mins → Still use cache (no auto-refetch)
-// Tab switch → Use cache (no refetch)
-// Page refresh (F5) → Fresh fetch from backend
+      // ✅ Invalidate admin topics list (to update doc counts)
+      queryClient.invalidateQueries({
+        queryKey: COURSES_QUERY_KEYS.ADMIN_TOPICS_LIST,
+      });
+
+      // ✅ Invalidate public topics list
+      queryClient.invalidateQueries({
+        queryKey: COURSES_QUERY_KEYS.PUBLIC_TOPICS_LIST,
+      });
+
+      toast.success("Document moved successfully");
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
+  });
+}
