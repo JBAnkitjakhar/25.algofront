@@ -1,3 +1,4 @@
+//src/app/admin/questions/[id]/edit/page.tsx
 "use client";
 
 import { useState, useEffect } from "react";
@@ -27,8 +28,8 @@ import {
 import { QuestionEditorSidebar } from "@/having/adminQuestions/components/QuestionEditorSidebar";
 import { CodeSnippetsManager } from "@/having/adminQuestions/components";
 import toast from "react-hot-toast";
-import axios from "axios";
 import Image from "next/image";
+import apiClient from "@/lib/api/client";
 
 export default function EditQuestionPage() {
   const router = useRouter();
@@ -94,7 +95,21 @@ export default function EditQuestionPage() {
     }));
   };
 
-  // ✅ Delete image from Cloudinary and remove from statement
+  // ✅ Helper function - add this BEFORE handleDeleteImage
+  const extractPublicIdFromUrl = (url: string): string | null => {
+    try {
+      // Cloudinary URL format: https://res.cloudinary.com/{cloud}/image/upload/v{version}/{public_id}.{format}
+      const match = url.match(/\/upload\/v\d+\/(.+)\.[^.]+$/);
+      if (match && match[1]) {
+        return match[1]; // Returns: algoarena/questions/questions/uuid
+      }
+      return null;
+    } catch (error) {
+      console.error("Error extracting public_id:", error);
+      return null;
+    }
+  };
+
   const handleDeleteImage = async (imageUrl: string) => {
     if (
       !confirm(
@@ -107,17 +122,19 @@ export default function EditQuestionPage() {
     setIsDeletingImage(imageUrl);
 
     try {
-      // Extract public_id from Cloudinary URL
-      const urlParts = imageUrl.split("/");
-      const publicIdWithExtension = urlParts[urlParts.length - 1];
-      const publicId = publicIdWithExtension.split(".")[0];
-      const folder = "algoarena/questions";
-      const fullPublicId = `${folder}/${publicId}`;
+      const publicId = extractPublicIdFromUrl(imageUrl);
 
-      // Delete from Cloudinary
-      await axios.delete(
-        `/api/files/images?publicId=${encodeURIComponent(fullPublicId)}`
+      if (!publicId) {
+        throw new Error("Could not extract public_id from image URL");
+      }
+
+      const response = await apiClient.delete(
+        `/files/images?publicId=${encodeURIComponent(publicId)}`
       );
+
+      if (!response.success) {
+        throw new Error(response.message || "Delete failed");
+      }
 
       // Remove from imageUrls array
       setFormData((prev) => ({
@@ -144,9 +161,35 @@ export default function EditQuestionPage() {
       }
 
       toast.success("Image deleted successfully");
-    } catch (error) {
-      console.error("Delete failed:", error);
-      toast.error("Failed to delete image from Cloudinary");
+    } catch (error: unknown) {
+      // ✅ FIXED: unknown instead of any
+      console.error("❌ Delete failed:", error);
+
+      // ✅ Type-safe error handling
+      let errorMessage = "Failed to delete image";
+
+      if (error instanceof Error) {
+        errorMessage = error.message;
+        console.error("   Error details:", {
+          message: error.message,
+          name: error.name,
+        });
+      } else if (
+        typeof error === "object" &&
+        error !== null &&
+        "response" in error
+      ) {
+        const apiError = error as {
+          response?: { data?: { message?: string }; status?: number };
+        };
+        errorMessage = apiError.response?.data?.message || errorMessage;
+        console.error("   Error details:", {
+          message: apiError.response?.data?.message,
+          status: apiError.response?.status,
+        });
+      }
+
+      toast.error(`Failed to delete: ${errorMessage}`);
     } finally {
       setIsDeletingImage(null);
     }
@@ -217,10 +260,12 @@ export default function EditQuestionPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // ✅ Sync imageUrls with actual images in statement
+    // ✅ Extract images from HTML BEFORE validation
     const imagesInStatement = extractImagesFromStatement(
       formData.statement || ""
     );
+
+    // ✅ Update formData with extracted images
     const updatedFormData = {
       ...formData,
       imageUrls: imagesInStatement,
@@ -238,6 +283,8 @@ export default function EditQuestionPage() {
       updatedFormData.categoryId !== question?.categoryId ||
       updatedFormData.level !== question?.level ||
       updatedFormData.displayOrder !== question?.displayOrder ||
+      JSON.stringify(updatedFormData.imageUrls) !==
+        JSON.stringify(question?.imageUrls) ||
       JSON.stringify(updatedFormData.codeSnippets) !==
         JSON.stringify(question?.codeSnippets);
 
@@ -247,6 +294,10 @@ export default function EditQuestionPage() {
     }
 
     setErrors([]);
+
+    // ✅ Log for debugging
+    console.log("Submitting with imageUrls:", updatedFormData.imageUrls);
+
     updateQuestionMutation.mutate(
       { id: questionId, request: updatedFormData },
       {

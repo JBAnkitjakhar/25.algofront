@@ -1,4 +1,4 @@
-// src/having/adminquestions/service.ts
+// src/having/adminQuestions/service.ts
 
 import { apiClient } from "@/lib/api/client";
 import type { ApiResponse } from "@/types/api";
@@ -23,10 +23,12 @@ class AdminQuestionsService {
   }): Promise<ApiResponse<QuestionsSummaryResponse>> {
     try {
       const queryParams = new URLSearchParams();
-      if (params?.page !== undefined) queryParams.append('page', params.page.toString());
-      if (params?.size !== undefined) queryParams.append('size', params.size.toString());
+      if (params?.page !== undefined)
+        queryParams.append("page", params.page.toString());
+      if (params?.size !== undefined)
+        queryParams.append("size", params.size.toString());
 
-      const url = queryParams.toString() 
+      const url = queryParams.toString()
         ? `${ADMIN_QUESTIONS_ENDPOINTS.SUMMARY}?${queryParams}`
         : ADMIN_QUESTIONS_ENDPOINTS.SUMMARY;
 
@@ -44,7 +46,9 @@ class AdminQuestionsService {
   /**
    * Fetch categories metadata
    */
-  async getCategoriesMetadata(): Promise<ApiResponse<CategoriesMetadataResponse>> {
+  async getCategoriesMetadata(): Promise<
+    ApiResponse<CategoriesMetadataResponse>
+  > {
     try {
       return await apiClient.get<CategoriesMetadataResponse>(
         ADMIN_QUESTIONS_ENDPOINTS.CATEGORIES_METADATA
@@ -146,15 +150,38 @@ class AdminQuestionsService {
       const formData = new FormData();
       formData.append("image", file);
 
-      return await apiClient.post<ImageUploadResponse>(
-        ADMIN_QUESTIONS_ENDPOINTS.UPLOAD_IMAGE,
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
+      // ✅ FIXED: Specify the full response structure
+      const response = await apiClient.post<{
+        success: boolean;
+        data: ImageUploadResponse;
+        message: string;
+      }>(ADMIN_QUESTIONS_ENDPOINTS.UPLOAD_IMAGE, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      // ✅ FIXED: Unwrap the nested response structure
+      if (response.success && response.data && response.data.success) {
+        return {
+          success: true,
+          data: response.data.data, // ← Access nested data
+        };
+      }
+
+      if (!response.success) {
+        return {
+          success: false,
+          error: response.error || "Upload failed",
+          message: response.message || "Failed to upload image",
+        };
+      }
+
+      return {
+        success: false,
+        error: "Upload failed",
+        message: response.data?.message || "Failed to upload image",
+      };
     } catch (error) {
       console.error("Error uploading image:", error);
       return {
@@ -173,9 +200,7 @@ class AdminQuestionsService {
     categories: CategoriesMetadataResponse
   ): QuestionWithCategory[] {
     // Create O(1) lookup map
-    const categoryMap = new Map(
-      categories.map((cat) => [cat.id, cat.name])
-    );
+    const categoryMap = new Map(categories.map((cat) => [cat.id, cat.name]));
 
     // Map questions with category names
     return questions.content.map((question) => ({

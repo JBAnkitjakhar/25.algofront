@@ -69,6 +69,8 @@ export function QuestionEditor({
         types: ['heading', 'paragraph'],
       }),
       Image.configure({
+        inline: true,
+        allowBase64: true,
         HTMLAttributes: {
           class: 'max-w-full h-auto rounded-lg my-4',
         },
@@ -98,20 +100,21 @@ export function QuestionEditor({
     immediatelyRender: false,
   });
 
+  // ✅ CRITICAL: Call onEditorReady as soon as editor is created
   useEffect(() => {
     if (editor && onEditorReady) {
+      console.log('✅ Editor ready, calling onEditorReady');
       onEditorReady(editor);
     }
   }, [editor, onEditorReady]);
 
+  // ✅ Only set content on initial mount
   useEffect(() => {
-    if (isMounted && editor && content !== editor.getHTML()) {
-      const timer = setTimeout(() => {
-        editor.commands.setContent(content || '', { emitUpdate: false });
-      }, 10);
-      return () => clearTimeout(timer);
+    if (isMounted && editor && content && !editor.getHTML()) {
+      console.log('📄 Setting initial content');
+      editor.commands.setContent(content, { emitUpdate: false });
     }
-  }, [content, editor, isMounted]);
+  }, [isMounted, editor, content]);
 
   if (!editor) {
     return (

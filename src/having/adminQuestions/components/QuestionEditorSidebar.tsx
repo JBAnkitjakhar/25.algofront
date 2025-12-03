@@ -1,16 +1,13 @@
+//src/having/adminQuestions/components/QuestionEditorSidebar.tsx
+
 "use client";
 
-import { Editor } from '@tiptap/react';
-import { useState, useRef } from 'react';
-import { 
-  Bold, 
-  Italic, 
-  Code, 
-  List, 
-  ListOrdered,
-  Heading1,
-  Heading2,
-  Heading3,
+import { Editor } from "@tiptap/react";
+import { useState, useRef } from "react";
+import {
+  Bold,
+  Italic,
+  Code,
   AlignLeft,
   AlignCenter,
   AlignRight,
@@ -21,20 +18,40 @@ import {
   Redo,
   Palette,
   Highlighter,
-} from 'lucide-react';
-import { useUploadQuestionImage } from '../hooks';
-import toast from 'react-hot-toast';
-import { PROGRAMMING_LANGUAGES, QUESTION_VALIDATION } from '../constants';
+} from "lucide-react";
+import { useUploadQuestionImage } from "../hooks";
+import toast from "react-hot-toast";
+import { PROGRAMMING_LANGUAGES, QUESTION_VALIDATION } from "../constants";
 
 const COLORS = [
-  "#000000", "#FF0000", "#00FF00", "#0000FF", "#FFFF00",
-  "#FF00FF", "#00FFFF", "#FFA500", "#800080", "#FFC0CB",
-  "#808080", "#8B4513", "#000080", "#008000", "#FF6347",
+  "#000000",
+  "#FF0000",
+  "#00FF00",
+  "#0000FF",
+  "#FFFF00",
+  "#FF00FF",
+  "#00FFFF",
+  "#FFA500",
+  "#800080",
+  "#FFC0CB",
+  "#808080",
+  "#8B4513",
+  "#000080",
+  "#008000",
+  "#FF6347",
 ];
 
 const HIGHLIGHT_COLORS = [
-  "#FFEB3B", "#FFC107", "#FF9800", "#FF5722", "#4CAF50",
-  "#00BCD4", "#03A9F4", "#2196F3", "#9C27B0", "#E91E63",
+  "#FFEB3B",
+  "#FFC107",
+  "#FF9800",
+  "#FF5722",
+  "#4CAF50",
+  "#00BCD4",
+  "#03A9F4",
+  "#2196F3",
+  "#9C27B0",
+  "#E91E63",
 ];
 
 interface QuestionEditorSidebarProps {
@@ -42,15 +59,17 @@ interface QuestionEditorSidebarProps {
   onImageUpload?: (imageUrl: string) => void; // ✅ NEW
 }
 
-export function QuestionEditorSidebar({ 
+export function QuestionEditorSidebar({
   editor,
-  onImageUpload // ✅ NEW
+  onImageUpload, // ✅ NEW
 }: QuestionEditorSidebarProps) {
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [showTextColorPicker, setShowTextColorPicker] = useState(false);
-  const [showHighlightColorPicker, setShowHighlightColorPicker] = useState(false);
+  const [showHighlightColorPicker, setShowHighlightColorPicker] =
+    useState(false);
   const [selectedTextColor, setSelectedTextColor] = useState("#000000");
-  const [selectedHighlightColor, setSelectedHighlightColor] = useState("#FFEB3B");
+  const [selectedHighlightColor, setSelectedHighlightColor] =
+    useState("#FFEB3B");
   const [selectedLanguage, setSelectedLanguage] = useState("javascript");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const uploadImageMutation = useUploadQuestionImage();
@@ -59,36 +78,93 @@ export function QuestionEditorSidebar({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (!file.type.startsWith('image/')) {
-      toast.error('Please select a valid image file');
+    console.log("🔍 Step 1: File selected:", file.name);
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select a valid image file");
       return;
     }
 
     if (file.size > QUESTION_VALIDATION.MAX_IMAGE_SIZE) {
-      toast.error(`Image size must be less than ${QUESTION_VALIDATION.MAX_IMAGE_SIZE / (1024 * 1024)}MB`);
+      toast.error(
+        `Image size must be less than ${
+          QUESTION_VALIDATION.MAX_IMAGE_SIZE / (1024 * 1024)
+        }MB`
+      );
       return;
     }
 
+    // ✅ CHECK EDITOR BEFORE UPLOAD
+    if (!editor) {
+      console.error("❌ Editor is not available yet");
+      toast.error("Editor is not ready. Please try again.");
+      return;
+    }
+
+    console.log("🔍 Step 2: Editor check passed, editor exists:", !!editor);
+
     setIsUploadingImage(true);
+
     try {
       const result = await uploadImageMutation.mutateAsync(file);
-      if (result.secure_url && editor) {
-        editor.chain().focus().setImage({ src: result.secure_url }).run();
-        
+      console.log("🔍 Step 3: Upload response:", result);
+
+      if (result.secure_url) {
+        console.log("🔍 Step 4: Inserting image with URL:", result.secure_url);
+
+        // ✅ Double check editor still exists
+        if (!editor) {
+          console.error("❌ Editor became unavailable during upload");
+          toast.error("Editor is not ready. Please refresh and try again.");
+          return;
+        }
+
+        // ✅ METHOD 1: Try insertContent first
+        try {
+          editor
+            .chain()
+            .focus()
+            .insertContent({
+              type: "image",
+              attrs: {
+                src: result.secure_url,
+                alt: file.name,
+              },
+            })
+            .run();
+
+          console.log("🔍 Step 5: Image inserted successfully");
+
+          // Add line break after image
+          editor.chain().focus().insertContent("<p></p>").run();
+        } catch (insertError) {
+          console.error(
+            "❌ Insert failed, trying setImage method:",
+            insertError
+          );
+
+          // ✅ METHOD 2: Fallback to setImage
+          editor.chain().focus().setImage({ src: result.secure_url }).run();
+        }
+
         // ✅ Notify parent component
         if (onImageUpload) {
+          console.log("🔍 Step 6: Calling onImageUpload");
           onImageUpload(result.secure_url);
         }
-        
-        toast.success('Image uploaded and inserted');
+
+        toast.success("Image uploaded and inserted");
+      } else {
+        console.error("❌ No secure_url in response:", result);
+        toast.error("Upload failed - no URL returned");
       }
     } catch (error) {
-      console.error('Upload failed:', error);
-      toast.error('Failed to upload image');
+      console.error("❌ Upload failed:", error);
+      toast.error("Failed to upload image");
     } finally {
       setIsUploadingImage(false);
       if (fileInputRef.current) {
-        fileInputRef.current.value = '';
+        fileInputRef.current.value = "";
       }
     }
   };
@@ -116,9 +192,9 @@ export function QuestionEditorSidebar({
               type="button"
               onClick={() => editor.chain().focus().toggleBold().run()}
               className={`flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-colors ${
-                editor.isActive('bold')
-                  ? 'bg-blue-100 text-blue-700'
-                  : 'hover:bg-gray-100 text-gray-700'
+                editor.isActive("bold")
+                  ? "bg-blue-100 text-blue-700"
+                  : "hover:bg-gray-100 text-gray-700"
               }`}
             >
               <Bold className="w-4 h-4" />
@@ -128,9 +204,9 @@ export function QuestionEditorSidebar({
               type="button"
               onClick={() => editor.chain().focus().toggleItalic().run()}
               className={`flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-colors ${
-                editor.isActive('italic')
-                  ? 'bg-blue-100 text-blue-700'
-                  : 'hover:bg-gray-100 text-gray-700'
+                editor.isActive("italic")
+                  ? "bg-blue-100 text-blue-700"
+                  : "hover:bg-gray-100 text-gray-700"
               }`}
             >
               <Italic className="w-4 h-4" />
@@ -140,9 +216,9 @@ export function QuestionEditorSidebar({
               type="button"
               onClick={() => editor.chain().focus().toggleCode().run()}
               className={`flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-colors ${
-                editor.isActive('code')
-                  ? 'bg-blue-100 text-blue-700'
-                  : 'hover:bg-gray-100 text-gray-700'
+                editor.isActive("code")
+                  ? "bg-blue-100 text-blue-700"
+                  : "hover:bg-gray-100 text-gray-700"
               }`}
             >
               <Code className="w-4 h-4" />
@@ -151,7 +227,7 @@ export function QuestionEditorSidebar({
           </div>
         </div>
 
-        {/* Headings */}
+        {/* Headings
         <div className="space-y-2 pt-2 border-t border-gray-200">
           <p className="text-xs font-semibold text-gray-700 uppercase tracking-wider">
             Headings
@@ -159,11 +235,13 @@ export function QuestionEditorSidebar({
           <div className="flex flex-col gap-1">
             <button
               type="button"
-              onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
+              onClick={() =>
+                editor.chain().focus().toggleHeading({ level: 1 }).run()
+              }
               className={`flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-colors ${
-                editor.isActive('heading', { level: 1 })
-                  ? 'bg-blue-100 text-blue-700'
-                  : 'hover:bg-gray-100 text-gray-700'
+                editor.isActive("heading", { level: 1 })
+                  ? "bg-blue-100 text-blue-700"
+                  : "hover:bg-gray-100 text-gray-700"
               }`}
             >
               <Heading1 className="w-4 h-4" />
@@ -171,11 +249,13 @@ export function QuestionEditorSidebar({
             </button>
             <button
               type="button"
-              onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+              onClick={() =>
+                editor.chain().focus().toggleHeading({ level: 2 }).run()
+              }
               className={`flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-colors ${
-                editor.isActive('heading', { level: 2 })
-                  ? 'bg-blue-100 text-blue-700'
-                  : 'hover:bg-gray-100 text-gray-700'
+                editor.isActive("heading", { level: 2 })
+                  ? "bg-blue-100 text-blue-700"
+                  : "hover:bg-gray-100 text-gray-700"
               }`}
             >
               <Heading2 className="w-4 h-4" />
@@ -183,21 +263,23 @@ export function QuestionEditorSidebar({
             </button>
             <button
               type="button"
-              onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
+              onClick={() =>
+                editor.chain().focus().toggleHeading({ level: 3 }).run()
+              }
               className={`flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-colors ${
-                editor.isActive('heading', { level: 3 })
-                  ? 'bg-blue-100 text-blue-700'
-                  : 'hover:bg-gray-100 text-gray-700'
+                editor.isActive("heading", { level: 3 })
+                  ? "bg-blue-100 text-blue-700"
+                  : "hover:bg-gray-100 text-gray-700"
               }`}
             >
               <Heading3 className="w-4 h-4" />
               <span>Heading 3</span>
             </button>
           </div>
-        </div>
+        </div> */}
 
         {/* Lists */}
-        <div className="space-y-2 pt-2 border-t border-gray-200">
+        {/* <div className="space-y-2 pt-2 border-t border-gray-200">
           <p className="text-xs font-semibold text-gray-700 uppercase tracking-wider">
             Lists
           </p>
@@ -206,9 +288,9 @@ export function QuestionEditorSidebar({
               type="button"
               onClick={() => editor.chain().focus().toggleBulletList().run()}
               className={`flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-colors ${
-                editor.isActive('bulletList')
-                  ? 'bg-blue-100 text-blue-700'
-                  : 'hover:bg-gray-100 text-gray-700'
+                editor.isActive("bulletList")
+                  ? "bg-blue-100 text-blue-700"
+                  : "hover:bg-gray-100 text-gray-700"
               }`}
             >
               <List className="w-4 h-4" />
@@ -218,16 +300,16 @@ export function QuestionEditorSidebar({
               type="button"
               onClick={() => editor.chain().focus().toggleOrderedList().run()}
               className={`flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-colors ${
-                editor.isActive('orderedList')
-                  ? 'bg-blue-100 text-blue-700'
-                  : 'hover:bg-gray-100 text-gray-700'
+                editor.isActive("orderedList")
+                  ? "bg-blue-100 text-blue-700"
+                  : "hover:bg-gray-100 text-gray-700"
               }`}
             >
               <ListOrdered className="w-4 h-4" />
               <span>Numbered List</span>
             </button>
           </div>
-        </div>
+        </div> */}
 
         {/* Text Alignment */}
         <div className="space-y-2 pt-2 border-t border-gray-200">
@@ -237,11 +319,11 @@ export function QuestionEditorSidebar({
           <div className="flex flex-col gap-1">
             <button
               type="button"
-              onClick={() => editor.chain().focus().setTextAlign('left').run()}
+              onClick={() => editor.chain().focus().setTextAlign("left").run()}
               className={`flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-colors ${
-                editor.isActive({ textAlign: 'left' })
-                  ? 'bg-blue-100 text-blue-700'
-                  : 'hover:bg-gray-100 text-gray-700'
+                editor.isActive({ textAlign: "left" })
+                  ? "bg-blue-100 text-blue-700"
+                  : "hover:bg-gray-100 text-gray-700"
               }`}
             >
               <AlignLeft className="w-4 h-4" />
@@ -249,11 +331,13 @@ export function QuestionEditorSidebar({
             </button>
             <button
               type="button"
-              onClick={() => editor.chain().focus().setTextAlign('center').run()}
+              onClick={() =>
+                editor.chain().focus().setTextAlign("center").run()
+              }
               className={`flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-colors ${
-                editor.isActive({ textAlign: 'center' })
-                  ? 'bg-blue-100 text-blue-700'
-                  : 'hover:bg-gray-100 text-gray-700'
+                editor.isActive({ textAlign: "center" })
+                  ? "bg-blue-100 text-blue-700"
+                  : "hover:bg-gray-100 text-gray-700"
               }`}
             >
               <AlignCenter className="w-4 h-4" />
@@ -261,11 +345,11 @@ export function QuestionEditorSidebar({
             </button>
             <button
               type="button"
-              onClick={() => editor.chain().focus().setTextAlign('right').run()}
+              onClick={() => editor.chain().focus().setTextAlign("right").run()}
               className={`flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-colors ${
-                editor.isActive({ textAlign: 'right' })
-                  ? 'bg-blue-100 text-blue-700'
-                  : 'hover:bg-gray-100 text-gray-700'
+                editor.isActive({ textAlign: "right" })
+                  ? "bg-blue-100 text-blue-700"
+                  : "hover:bg-gray-100 text-gray-700"
               }`}
             >
               <AlignRight className="w-4 h-4" />
@@ -279,7 +363,7 @@ export function QuestionEditorSidebar({
           <p className="text-xs font-semibold text-gray-700 uppercase tracking-wider">
             Colors
           </p>
-          
+
           {/* Text Color */}
           <div className="space-y-1">
             <label className="text-xs text-gray-600">Text Color</label>
@@ -299,21 +383,44 @@ export function QuestionEditorSidebar({
 
               {showTextColorPicker && (
                 <div className="absolute left-0 top-full mt-1 p-3 bg-white border rounded-lg shadow-lg z-20 w-full">
-                  <div className="grid grid-cols-5 gap-1">
-                    {COLORS.map((color) => (
-                      <button
-                        key={color}
-                        type="button"
-                        onClick={() => {
-                          editor.chain().focus().setColor(color).run();
-                          setSelectedTextColor(color);
-                          setShowTextColorPicker(false);
-                        }}
-                        className="w-full h-8 rounded border border-gray-300 hover:scale-110 transition-transform"
-                        style={{ backgroundColor: color }}
-                        title={color}
-                      />
-                    ))}
+                  {/* ✅ ADD COLOR PICKER INPUT */}
+                  <div className="mb-3">
+                    <label className="block text-xs font-medium text-gray-700 mb-1">
+                      Pick Custom Color
+                    </label>
+                    <input
+                      type="color"
+                      value={selectedTextColor}
+                      onChange={(e) => {
+                        const color = e.target.value;
+                        setSelectedTextColor(color);
+                        editor?.chain().focus().setColor(color).run();
+                      }}
+                      className="w-full h-10 rounded border border-gray-300 cursor-pointer"
+                    />
+                  </div>
+
+                  {/* Preset Colors */}
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">
+                      Quick Colors
+                    </label>
+                    <div className="grid grid-cols-5 gap-1">
+                      {COLORS.map((color) => (
+                        <button
+                          key={color}
+                          type="button"
+                          onClick={() => {
+                            editor.chain().focus().setColor(color).run();
+                            setSelectedTextColor(color);
+                            setShowTextColorPicker(false);
+                          }}
+                          className="w-full h-8 rounded border border-gray-300 hover:scale-110 transition-transform"
+                          style={{ backgroundColor: color }}
+                          title={color}
+                        />
+                      ))}
+                    </div>
                   </div>
                 </div>
               )}
@@ -326,7 +433,9 @@ export function QuestionEditorSidebar({
             <div className="relative">
               <button
                 type="button"
-                onClick={() => setShowHighlightColorPicker(!showHighlightColorPicker)}
+                onClick={() =>
+                  setShowHighlightColorPicker(!showHighlightColorPicker)
+                }
                 className="w-full flex items-center gap-2 px-3 py-2 text-sm rounded-lg hover:bg-gray-100 border border-gray-300 transition-colors"
               >
                 <Highlighter className="w-4 h-4" />
@@ -339,21 +448,52 @@ export function QuestionEditorSidebar({
 
               {showHighlightColorPicker && (
                 <div className="absolute left-0 top-full mt-1 p-3 bg-white border rounded-lg shadow-lg z-20 w-full">
-                  <div className="grid grid-cols-5 gap-1">
-                    {HIGHLIGHT_COLORS.map((color) => (
-                      <button
-                        key={color}
-                        type="button"
-                        onClick={() => {
-                          editor.chain().focus().toggleHighlight({ color }).run();
-                          setSelectedHighlightColor(color);
-                          setShowHighlightColorPicker(false);
-                        }}
-                        className="w-full h-8 rounded border border-gray-300 hover:scale-110 transition-transform"
-                        style={{ backgroundColor: color }}
-                        title={color}
-                      />
-                    ))}
+                  {/* ✅ ADD COLOR PICKER INPUT */}
+                  <div className="mb-3">
+                    <label className="block text-xs font-medium text-gray-700 mb-1">
+                      Pick Custom Color
+                    </label>
+                    <input
+                      type="color"
+                      value={selectedHighlightColor}
+                      onChange={(e) => {
+                        const color = e.target.value;
+                        setSelectedHighlightColor(color);
+                        editor
+                          ?.chain()
+                          .focus()
+                          .toggleHighlight({ color })
+                          .run();
+                      }}
+                      className="w-full h-10 rounded border border-gray-300 cursor-pointer"
+                    />
+                  </div>
+
+                  {/* Preset Colors */}
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">
+                      Quick Colors
+                    </label>
+                    <div className="grid grid-cols-5 gap-1">
+                      {HIGHLIGHT_COLORS.map((color) => (
+                        <button
+                          key={color}
+                          type="button"
+                          onClick={() => {
+                            editor
+                              .chain()
+                              .focus()
+                              .toggleHighlight({ color })
+                              .run();
+                            setSelectedHighlightColor(color);
+                            setShowHighlightColorPicker(false);
+                          }}
+                          className="w-full h-8 rounded border border-gray-300 hover:scale-110 transition-transform"
+                          style={{ backgroundColor: color }}
+                          title={color}
+                        />
+                      ))}
+                    </div>
                   </div>
                 </div>
               )}
@@ -415,9 +555,9 @@ export function QuestionEditorSidebar({
               type="button"
               onClick={insertCodeBlock}
               className={`w-full flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-colors ${
-                editor.isActive('codeBlock')
-                  ? 'bg-blue-100 text-blue-700'
-                  : 'hover:bg-gray-100 text-gray-700 border border-gray-300'
+                editor.isActive("codeBlock")
+                  ? "bg-blue-100 text-blue-700"
+                  : "hover:bg-gray-100 text-gray-700 border border-gray-300"
               }`}
             >
               <Terminal className="w-4 h-4" />
