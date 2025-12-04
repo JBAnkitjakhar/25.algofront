@@ -492,17 +492,6 @@ export default function EditQuestionPage() {
             />
           </div>
 
-          {/* Code Snippets */}
-          <div className="bg-white border border-gray-200 rounded-lg p-6">
-            <label className="block text-sm font-medium text-gray-700 mb-3">
-              Starter Code Templates (Optional)
-            </label>
-            <CodeSnippetsManager
-              codeSnippets={formData.codeSnippets || []}
-              onChange={(snippets) => updateFormData("codeSnippets", snippets)}
-            />
-          </div>
-
           {/* ✅ Uploaded Images Section */}
           {currentImages.length > 0 && (
             <div className="bg-white border border-gray-200 rounded-lg p-6">
@@ -559,6 +548,17 @@ export default function EditQuestionPage() {
               )}
             </div>
           )}
+
+          {/* Code Snippets */}
+          <div className="bg-white border border-gray-200 rounded-lg p-6">
+            <label className="block text-sm font-medium text-gray-700 mb-3">
+              Starter Code Templates (Optional)
+            </label>
+            <CodeSnippetsManager
+              codeSnippets={formData.codeSnippets || []}
+              onChange={(snippets) => updateFormData("codeSnippets", snippets)}
+            />
+          </div>
         </form>
       </div>
 
