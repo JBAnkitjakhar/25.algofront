@@ -1,4 +1,4 @@
-// src/lib/api/queryClient.ts - SIMPLIFIED FOR ALWAYS FRESH DATA
+// src/lib/api/queryClient.ts
 
 import { QueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';

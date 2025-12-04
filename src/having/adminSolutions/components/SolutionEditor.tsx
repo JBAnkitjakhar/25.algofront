@@ -21,7 +21,6 @@ import c from 'highlight.js/lib/languages/c';
 import Placeholder from '@tiptap/extension-placeholder';
 import { useEffect, useState } from 'react';
 import { Loader2 } from 'lucide-react';
-import '@/components/admin/styles/CourseEditorHighlighting.css';
 
 const lowlight = createLowlight();
 lowlight.register('javascript', javascript);

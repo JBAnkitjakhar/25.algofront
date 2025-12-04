@@ -107,7 +107,6 @@ export function useUpdateUserRole() {
       // Invalidate all user-related queries to refresh data
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.ADMIN.USERS });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.USERS.DETAIL(variables.userId) });
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.ADMIN.STATS });
       
       toast.success(`Successfully updated ${updatedUser.name}'s role to ${updatedUser.role}`);
     },

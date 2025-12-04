@@ -14,7 +14,7 @@ import {
   ServerIcon,
 } from '@heroicons/react/24/outline';
 import AdminLayout from '@/components/admin/AdminLayout';
-import { StatCard } from '@/components/admin/StatCard';
+import { StatCard } from '@/having/adminOverview/components/StatCard';
 import { useAdminOverview } from '@/having/adminOverview/hooks';
 import { adminOverviewService } from '@/having/adminOverview/service';
 import { dateUtils } from '@/lib/utils/common';

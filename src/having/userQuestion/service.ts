@@ -1,0 +1,85 @@
+// src/having/userQuestion/service.ts
+
+import { apiClient } from '@/lib/api/client';
+import type { ApiResponse } from '@/types';
+import type {
+  QuestionDetail,
+  UserQuestionProgress,
+  SolutionSummary,
+  ApproachMetadata,
+  ApproachDetail,
+  CreateApproachRequest,
+  UpdateApproachRequest,
+} from './types';
+
+class UserQuestionService {
+  async getQuestionById(id: string): Promise<ApiResponse<QuestionDetail>> {
+    return apiClient.get<QuestionDetail>(`/questions/${id}`);
+  }
+
+  async getQuestionProgress(questionId: string): Promise<ApiResponse<UserQuestionProgress>> {
+    return apiClient.get<UserQuestionProgress>(
+      `/user/me/progress/${questionId}`
+    );
+  }
+
+  async updateQuestionProgress(
+    questionId: string, 
+    solved: boolean
+  ): Promise<ApiResponse<UserQuestionProgress>> {
+    return apiClient.put<UserQuestionProgress>(
+      `/user/me/progress/${questionId}`,
+      { solved }
+    );
+  }
+
+  async getSolutionsByQuestion(questionId: string): Promise<ApiResponse<SolutionSummary[]>> {
+    return apiClient.get<SolutionSummary[]>(
+      `/solutions/question/${questionId}`
+    );
+  }
+
+  async getApproachesByQuestion(questionId: string): Promise<ApiResponse<ApproachMetadata[]>> {
+    return apiClient.get<ApproachMetadata[]>(
+      `/approaches/question/${questionId}`
+    );
+  }
+
+  async getApproachDetail(
+    questionId: string, 
+    approachId: string
+  ): Promise<ApiResponse<ApproachDetail>> {
+    return apiClient.get<ApproachDetail>(
+      `/approaches/question/${questionId}/${approachId}`
+    );
+  }
+
+  async createApproach(
+    questionId: string,
+    data: CreateApproachRequest
+  ): Promise<ApiResponse<ApproachDetail>> {
+    return apiClient.post<ApproachDetail>(
+      `/approaches/question/${questionId}`,
+      data
+    );
+  }
+
+  async updateApproach(
+    questionId: string,
+    approachId: string,
+    data: UpdateApproachRequest
+  ): Promise<ApiResponse<ApproachDetail>> {
+    return apiClient.put<ApproachDetail>(
+      `/approaches/question/${questionId}/${approachId}`,
+      data
+    );
+  }
+
+  async deleteApproach(questionId: string, approachId: string): Promise<ApiResponse<void>> {
+    return apiClient.delete<void>(
+      `/approaches/question/${questionId}/${approachId}`
+    );
+  }
+}
+
+export const userQuestionService = new UserQuestionService();

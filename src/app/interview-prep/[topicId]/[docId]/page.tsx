@@ -37,8 +37,8 @@ import bash from 'highlight.js/lib/languages/bash';
 import yaml from 'highlight.js/lib/languages/yaml';
 import markdown from 'highlight.js/lib/languages/markdown';
 
-// Import the CSS for syntax highlighting
-import '@/components/admin/styles/CourseEditorHighlighting.css';
+// import '@having/courses/components/styles/CourseEditorHighlighting.css';
+
 import { useDocument } from '@/having/courses';
 
 // Register all languages

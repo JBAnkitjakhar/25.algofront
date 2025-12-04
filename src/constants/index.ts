@@ -14,103 +14,14 @@ export const AUTH_ENDPOINTS = {
 
 // Admin endpoints
 export const ADMIN_ENDPOINTS = {
-  STATS: `${API_BASE_URL}/admin/stats`,
-  SETTINGS: `${API_BASE_URL}/admin/settings`,
-  PROGRESS: `${API_BASE_URL}/admin/progress`,
-  HEALTH: `${API_BASE_URL}/admin/health`,
-  METRICS: `${API_BASE_URL}/admin/metrics`,
   // User management endpoints
   USERS: `${API_BASE_URL}/admin/users`,
   USER_BY_ID: (id: string) => `${API_BASE_URL}/admin/users/${id}`,
   USERS_BY_ROLE: (role: string) => `${API_BASE_URL}/admin/users/role/${role}`,
   UPDATE_USER_ROLE: (id: string) => `${API_BASE_URL}/admin/users/${id}/role`,
   USER_PERMISSIONS: `${API_BASE_URL}/admin/users/permissions`,
-  GLOBAL_PROGRESS: `${API_BASE_URL}/admin/progress/global`,
 } as const;
-
-// Category management endpoints
-export const CATEGORY_ENDPOINTS = {
-  LIST: `${API_BASE_URL}/categories`,
-  WITH_PROGRESS: `${API_BASE_URL}/categories/with-progress`, // NEW: Optimized endpoint
-  CREATE: `${API_BASE_URL}/categories`,
-  GET_BY_ID: (id: string) => `${API_BASE_URL}/categories/${id}`,
-  UPDATE: (id: string) => `${API_BASE_URL}/categories/${id}`,
-  DELETE: (id: string) => `${API_BASE_URL}/categories/${id}`,
-  GET_STATS: (id: string) => `${API_BASE_URL}/categories/${id}/stats`,
-  GET_PROGRESS: (id: string) => `${API_BASE_URL}/categories/${id}/progress`,
-} as const;
-
-// Question management endpoints
-export const QUESTION_ENDPOINTS = {
-  LIST: `${API_BASE_URL}/questions`,
-  SUMMARY: `${API_BASE_URL}/questions/summary`, // NEW: Optimized endpoint with user progress
-  CREATE: `${API_BASE_URL}/questions`,
-  GET_BY_ID: (id: string) => `${API_BASE_URL}/questions/${id}`,
-  UPDATE: (id: string) => `${API_BASE_URL}/questions/${id}`,
-  DELETE: (id: string) => `${API_BASE_URL}/questions/${id}`,
-  SEARCH: `${API_BASE_URL}/questions/search`,
-  STATS: `${API_BASE_URL}/questions/stats`,
-  GET_PROGRESS: (id: string) => `${API_BASE_URL}/questions/${id}/progress`,
-  UPDATE_PROGRESS: (id: string) => `${API_BASE_URL}/questions/${id}/progress`,
-} as const;
-
-// USER PROGRESS ENDPOINTS - NEW
-export const USER_PROGRESS_ENDPOINTS = {
-  CURRENT_USER_STATS: `${API_BASE_URL}/users/progress`,
-  CURRENT_USER_RECENT: `${API_BASE_URL}/users/progress/recent`,
-  USER_STATS: (userId: string) => `${API_BASE_URL}/users/${userId}/progress`,
-  USER_ALL_PROGRESS: (userId: string) =>
-    `${API_BASE_URL}/users/${userId}/progress/all`,
-} as const;
-
-// APPROACH ENDPOINTS - NEW
-export const APPROACH_ENDPOINTS = {
-  GET_BY_ID: (id: string) => `${API_BASE_URL}/approaches/${id}`,
-  BY_QUESTION: (questionId: string) =>
-    `${API_BASE_URL}/approaches/question/${questionId}`,
-  CREATE_FOR_QUESTION: (questionId: string) =>
-    `${API_BASE_URL}/approaches/question/${questionId}`,
-  UPDATE: (id: string) => `${API_BASE_URL}/approaches/${id}`,
-  DELETE: (id: string) => `${API_BASE_URL}/approaches/${id}`,
-  MY_APPROACHES: `${API_BASE_URL}/approaches/my-approaches`,
-  MY_RECENT: `${API_BASE_URL}/approaches/my-approaches/recent`,
-  MY_STATS: `${API_BASE_URL}/approaches/my-stats`,
-  SIZE_USAGE: (questionId: string) =>
-    `${API_BASE_URL}/approaches/question/${questionId}/size-usage`,
-  CHECK_LIMITS: (questionId: string) =>
-    `${API_BASE_URL}/approaches/question/${questionId}/check-limits`,
-  CHECK_SIZE: (questionId: string) =>
-    `${API_BASE_URL}/approaches/question/${questionId}/check-size`,
-} as const;
-
-// Solution management endpoints
-export const SOLUTION_ENDPOINTS = {
-  LIST: `${API_BASE_URL}/solutions`,
-  GET_BY_ID: (id: string) => `${API_BASE_URL}/solutions/${id}`,
-  BY_QUESTION: (questionId: string) =>
-    `${API_BASE_URL}/solutions/question/${questionId}`,
-  CREATE_FOR_QUESTION: (questionId: string) =>
-    `${API_BASE_URL}/solutions/question/${questionId}`,
-  UPDATE: (id: string) => `${API_BASE_URL}/solutions/${id}`,
-  DELETE: (id: string) => `${API_BASE_URL}/solutions/${id}`,
-  STATS: `${API_BASE_URL}/solutions/stats`,
-  WITH_IMAGES: `${API_BASE_URL}/solutions/with-images`,
-  WITH_VISUALIZERS: `${API_BASE_URL}/solutions/with-visualizers`,
-  WITH_YOUTUBE: `${API_BASE_URL}/solutions/with-youtube`,
-  BY_CREATOR: (creatorId: string) =>
-    `${API_BASE_URL}/solutions/creator/${creatorId}`,
-  // Link validation
-  VALIDATE_YOUTUBE: `${API_BASE_URL}/solutions/validate-youtube`,
-  VALIDATE_DRIVE: `${API_BASE_URL}/solutions/validate-drive`,
-  // Image management
-  ADD_IMAGE: (id: string) => `${API_BASE_URL}/solutions/${id}/images`,
-  REMOVE_IMAGE: (id: string) => `${API_BASE_URL}/solutions/${id}/images`,
-  // Visualizer management
-  ADD_VISUALIZER: (id: string) => `${API_BASE_URL}/solutions/${id}/visualizers`,
-  REMOVE_VISUALIZER: (id: string) =>
-    `${API_BASE_URL}/solutions/${id}/visualizers`,
-} as const;
-
+ 
 // Compiler endpoints
 export const COMPILER_ENDPOINTS = {
   EXECUTE: `${API_BASE_URL}/compiler/execute`,
@@ -209,11 +120,6 @@ export const QUERY_KEYS = {
     REFRESH: ["auth", "refresh"] as const,
   },
   ADMIN: {
-    STATS: ["admin", "stats"] as const,
-    SETTINGS: ["admin", "settings"] as const,
-    PROGRESS: ["admin", "progress"] as const,
-    HEALTH: ["admin", "health"] as const,
-    METRICS: ["admin", "metrics"] as const,
     USERS: ["admin", "users"] as const,
     USER_PERMISSIONS: ["admin", "users", "permissions"] as const,
   },
@@ -221,61 +127,6 @@ export const QUERY_KEYS = {
     LIST: ["users", "list"] as const,
     BY_ROLE: (role: string) => ["users", "role", role] as const,
     DETAIL: (id: string) => ["users", "detail", id] as const,
-  },
-  CATEGORIES: {
-    LIST: ["categories", "list"] as const,
-    WITH_PROGRESS: ["categories", "with-progress"] as const, // NEW: For optimized categories
-    DETAIL: (id: string) => ["categories", "detail", id] as const,
-    STATS: (id: string) => ["categories", "stats", id] as const,
-    PROGRESS: (id: string) => ["categories", "progress", id] as const,
-  },
-  QUESTIONS: {
-    LIST: ["questions", "list"] as const,
-    SUMMARY: ["questions", "summary"] as const, // NEW: For optimized summaries
-    DETAIL: (id: string) => ["questions", "detail", id] as const,
-    STATS: ["questions", "stats"] as const,
-    SEARCH: (query: string) => ["questions", "search", query] as const,
-    BY_CATEGORY: (categoryId: string) =>
-      ["questions", "category", categoryId] as const,
-    PROGRESS: (id: string) => ["questions", "progress", id] as const,
-  },
-  // USER PROGRESS QUERY KEYS - NEW
-  USER_PROGRESS: {
-    CURRENT_STATS: ["userProgress", "currentStats"] as const,
-    CURRENT_RECENT: ["userProgress", "currentRecent"] as const,
-    QUESTION_PROGRESS: (questionId: string) =>
-      ["userProgress", "question", questionId] as const,
-    CATEGORY_PROGRESS: (categoryId: string) =>
-      ["userProgress", "category", categoryId] as const,
-    USER_STATS: (userId: string) =>
-      ["userProgress", "userStats", userId] as const,
-    USER_ALL: (userId: string) => ["userProgress", "userAll", userId] as const,
-  },
-  // APPROACH QUERY KEYS - NEW
-  APPROACHES: {
-    BY_QUESTION: (questionId: string) =>
-      ["approaches", "question", questionId] as const,
-    DETAIL: (id: string) => ["approaches", "detail", id] as const,
-    MY_APPROACHES: ["approaches", "my"] as const,
-    MY_RECENT: ["approaches", "my", "recent"] as const,
-    MY_STATS: ["approaches", "my", "stats"] as const,
-    SIZE_USAGE: (questionId: string) =>
-      ["approaches", "size", questionId] as const,
-    LIMITS: (questionId: string) =>
-      ["approaches", "limits", questionId] as const,
-  },
-  SOLUTIONS: {
-    LIST: ["solutions", "list"] as const,
-    DETAIL: (id: string) => ["solutions", "detail", id] as const,
-    BY_QUESTION: (questionId: string) =>
-      ["solutions", "question", questionId] as const,
-    BY_CREATOR: (creatorId: string) =>
-      ["solutions", "creator", creatorId] as const,
-    STATS: ["solutions", "stats"] as const,
-    VISUALIZERS: (solutionId?: string) =>
-      solutionId
-        ? (["solutions", "visualizers", solutionId] as const)
-        : (["solutions", "visualizers"] as const),
   },
   COMPILER: {
     RUNTIMES: ["compiler", "runtimes"] as const,
@@ -286,45 +137,8 @@ export const QUERY_KEYS = {
     CONFIG: ["files", "config"] as const,
     UPLOAD: ["files", "upload"] as const,
   },
-  // COURSES: {
-  //   TOPICS_LIST: ['courses', 'topics'] as const,
-  //   TOPIC_DETAIL: (topicId: string) => ['courses', 'topic', topicId] as const,
-  //   DOCS_BY_TOPIC: (topicId: string) => ['courses', 'docs', 'topic', topicId] as const,
-  //   DOC_DETAIL: (docId: string) => ['courses', 'doc', docId] as const,
-  //   IMAGE_CONFIG: ['courses', 'image', 'config'] as const,
-  //   STATS: ['courses', 'stats'] as const,
-  // },
 } as const;
-
-// Question validation constants
-export const QUESTION_VALIDATION = {
-  TITLE_MIN_LENGTH: 5,
-  TITLE_MAX_LENGTH: 200,
-  STATEMENT_MIN_LENGTH: 20,
-  STATEMENT_MAX_LENGTH: 10000,
-  MAX_IMAGES_PER_QUESTION: 5,
-  MAX_CODE_SNIPPETS: 10,
-} as const;
-
-// Solution validation constants
-export const SOLUTION_VALIDATION = {
-  CONTENT_MIN_LENGTH: 20,
-  CONTENT_MAX_LENGTH: 15000,
-  MAX_IMAGES_PER_SOLUTION: 10,
-  MAX_VISUALIZERS_PER_SOLUTION: 2,
-  CODE_MAX_LENGTH: 13000,
-  DESCRIPTION_MAX_LENGTH: 200,
-} as const;
-
-// APPROACH VALIDATION CONSTANTS - NEW
-export const APPROACH_VALIDATION = {
-  TEXT_MIN_LENGTH: 10,
-  TEXT_MAX_LENGTH: 10000,
-  CODE_MAX_LENGTH: 13000,
-  MAX_APPROACHES_PER_QUESTION: 3,
-  MAX_TOTAL_SIZE_PER_USER_PER_QUESTION: 15 * 1024, // 15KB in bytes
-} as const;
-
+ 
 // Compiler validation constants
 export const COMPILER_VALIDATION = {
   CODE_MAX_LENGTH: 50000,
@@ -356,12 +170,6 @@ export const QUESTION_LEVEL_COLORS = {
     text: "text-red-800 dark:text-red-300",
     border: "border-red-200 dark:border-red-800",
   },
-} as const;
-
-// Category validation constants
-export const CATEGORY_VALIDATION = {
-  NAME_MIN_LENGTH: 2,
-  NAME_MAX_LENGTH: 50,
 } as const;
 
 // User interface constants

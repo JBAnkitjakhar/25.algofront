@@ -1,4 +1,4 @@
-// src/components/admin/StatCard.tsx - Reusable stats card component
+// src/components/admin/StatCard.tsx  
 
 import { cn } from "@/lib/utils";
 

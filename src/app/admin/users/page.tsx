@@ -17,15 +17,11 @@ import {
   MagnifyingGlassIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
-import {
-  useUsers,
-  useUsersByRole,
-  useRolePermissions,
-} from "@/hooks/useUserManagement";
 import { UserRole, UserListItem, User } from "@/types";
 import { dateUtils } from "@/lib/utils/common";
 import { roleUtils } from "@/lib/utils/auth";
 import { useAuth } from "@/hooks/useAuth";
+import { useRolePermissions, useUsers, useUsersByRole } from "@/hooks/useUserManagement";
 
 const roleIcons = {
   [UserRole.USER]: UserIcon,

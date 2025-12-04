@@ -12,7 +12,7 @@ import {
   useUploadCourseImage,
   useAdminTopics,
 } from "@/having/courses/hooks";
-import CourseEditor from "@/components/admin/CourseEditor";
+import CourseEditor from "@/having/courses/components/CourseEditor";
 import { ArrowLeftIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import toast from "react-hot-toast";
 // import { CreateDocumentRequest, UpdateDocumentRequest } from '@/courses/types';
