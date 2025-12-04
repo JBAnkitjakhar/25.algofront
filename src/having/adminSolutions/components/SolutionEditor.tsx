@@ -1,5 +1,4 @@
 // src/having/adminSolutions/components/SolutionEditor.tsx
-// Main editor with TipTap - similar to QuestionEditor but for solutions
 
 "use client";
 
@@ -18,11 +17,27 @@ import python from 'highlight.js/lib/languages/python';
 import java from 'highlight.js/lib/languages/java';
 import cpp from 'highlight.js/lib/languages/cpp';
 import c from 'highlight.js/lib/languages/c';
+import csharp from 'highlight.js/lib/languages/csharp';
+import php from 'highlight.js/lib/languages/php';
+import ruby from 'highlight.js/lib/languages/ruby';
+import go from 'highlight.js/lib/languages/go';
+import rust from 'highlight.js/lib/languages/rust';
+import kotlin from 'highlight.js/lib/languages/kotlin';
+import swift from 'highlight.js/lib/languages/swift';
+import sql from 'highlight.js/lib/languages/sql';
+import xml from 'highlight.js/lib/languages/xml';
+import css from 'highlight.js/lib/languages/css';
+import json from 'highlight.js/lib/languages/json';
+import bash from 'highlight.js/lib/languages/bash';
+import yaml from 'highlight.js/lib/languages/yaml';
+import markdown from 'highlight.js/lib/languages/markdown';
 import Placeholder from '@tiptap/extension-placeholder';
 import { useEffect, useState } from 'react';
 import { Loader2 } from 'lucide-react';
+import './styles/SolutionEditorHighlighting.css';
 
 const lowlight = createLowlight();
+
 lowlight.register('javascript', javascript);
 lowlight.register('js', javascript);
 lowlight.register('typescript', typescript);
@@ -33,6 +48,28 @@ lowlight.register('java', java);
 lowlight.register('cpp', cpp);
 lowlight.register('c++', cpp);
 lowlight.register('c', c);
+lowlight.register('csharp', csharp);
+lowlight.register('cs', csharp);
+lowlight.register('php', php);
+lowlight.register('ruby', ruby);
+lowlight.register('rb', ruby);
+lowlight.register('go', go);
+lowlight.register('rust', rust);
+lowlight.register('rs', rust);
+lowlight.register('kotlin', kotlin);
+lowlight.register('kt', kotlin);
+lowlight.register('swift', swift);
+lowlight.register('sql', sql);
+lowlight.register('html', xml);
+lowlight.register('xml', xml);
+lowlight.register('css', css);
+lowlight.register('json', json);
+lowlight.register('bash', bash);
+lowlight.register('shell', bash);
+lowlight.register('yaml', yaml);
+lowlight.register('yml', yaml);
+lowlight.register('markdown', markdown);
+lowlight.register('md', markdown);
 
 interface SolutionEditorProps {
   content: string;
@@ -87,7 +124,7 @@ export function SolutionEditor({
         placeholder,
       }),
     ],
-    content: content || '',
+    content: '',
     onUpdate: ({ editor }) => {
       onChange(editor.getHTML());
     },
@@ -107,8 +144,11 @@ export function SolutionEditor({
   }, [editor, onEditorReady]);
 
   useEffect(() => {
-    if (isMounted && editor && content && !editor.getHTML()) {
-      editor.commands.setContent(content, { emitUpdate: false });
+    if (isMounted && editor && content !== editor.getHTML()) {
+      const timer = setTimeout(() => {
+        editor.commands.setContent(content, { emitUpdate: false });
+      }, 50);
+      return () => clearTimeout(timer);
     }
   }, [isMounted, editor, content]);
 

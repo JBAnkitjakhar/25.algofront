@@ -6,7 +6,6 @@ import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Editor } from "@tiptap/react";
 import {
-  ArrowLeftIcon,
   SaveIcon,
   Loader2Icon,
   HelpCircleIcon,
@@ -268,13 +267,6 @@ export default function CreateSolutionPage() {
 
       {/* Middle Content Area */}
       <div className="flex-1 flex flex-col max-w-5xl mx-auto px-6 py-8 overflow-y-auto">
-        <button
-          onClick={() => router.push(ADMIN_ROUTES.SOLUTIONS)}
-          className="flex items-center text-gray-700 hover:text-gray-900 font-medium transition-colors mb-6"
-        >
-          <ArrowLeftIcon className="w-5 h-5 mr-2" />
-          Back to Solutions
-        </button>
 
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-gray-900">

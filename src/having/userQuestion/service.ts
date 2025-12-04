@@ -1,4 +1,4 @@
-// src/having/userQuestion/service.ts
+// src/having/userQuestion/service.ts - UPDATED
 
 import { apiClient } from '@/lib/api/client';
 import type { ApiResponse } from '@/types';
@@ -23,14 +23,12 @@ class UserQuestionService {
     );
   }
 
-  async updateQuestionProgress(
-    questionId: string, 
-    solved: boolean
-  ): Promise<ApiResponse<UserQuestionProgress>> {
-    return apiClient.put<UserQuestionProgress>(
-      `/user/me/progress/${questionId}`,
-      { solved }
-    );
+  async markQuestionSolved(questionId: string): Promise<ApiResponse<void>> {
+    return apiClient.post<void>(`/user/me/mark/${questionId}`);
+  }
+
+  async unmarkQuestionSolved(questionId: string): Promise<ApiResponse<void>> {
+    return apiClient.delete<void>(`/user/me/unmark/${questionId}`);
   }
 
   async getSolutionsByQuestion(questionId: string): Promise<ApiResponse<SolutionSummary[]>> {

@@ -1,10 +1,10 @@
 // src/having/adminSolutions/components/SolutionEditorSidebar.tsx
-// Left sidebar with formatting tools - reuse from questions
 
 "use client";
 
 import { Editor } from "@tiptap/react";
 import { useState, useRef } from "react";
+import { useRouter } from "next/navigation";
 import {
   Bold,
   Italic,
@@ -19,20 +19,41 @@ import {
   Redo,
   Palette,
   Highlighter,
+  ArrowLeft,
 } from "lucide-react";
 import { useUploadSolutionImage } from "../hooks";
 import toast from "react-hot-toast";
 import { PROGRAMMING_LANGUAGES, SOLUTION_VALIDATION } from "../constants";
-
+import { ADMIN_ROUTES } from "@/constants";
 const COLORS = [
-  "#000000", "#FF0000", "#00FF00", "#0000FF", "#FFFF00", 
-  "#FF00FF", "#00FFFF", "#FFA500", "#800080", "#FFC0CB",
-  "#808080", "#8B4513", "#000080", "#008000", "#FF6347",
+  "#000000",
+  "#FF0000",
+  "#00FF00",
+  "#0000FF",
+  "#FFFF00",
+  "#FF00FF",
+  "#00FFFF",
+  "#FFA500",
+  "#800080",
+  "#FFC0CB",
+  "#808080",
+  "#8B4513",
+  "#000080",
+  "#008000",
+  "#FF6347",
 ];
 
 const HIGHLIGHT_COLORS = [
-  "#FFEB3B", "#FFC107", "#FF9800", "#FF5722", "#4CAF50",
-  "#00BCD4", "#03A9F4", "#2196F3", "#9C27B0", "#E91E63",
+  "#FFEB3B",
+  "#FFC107",
+  "#FF9800",
+  "#FF5722",
+  "#4CAF50",
+  "#00BCD4",
+  "#03A9F4",
+  "#2196F3",
+  "#9C27B0",
+  "#E91E63",
 ];
 
 interface SolutionEditorSidebarProps {
@@ -44,11 +65,14 @@ export function SolutionEditorSidebar({
   editor,
   onImageUpload,
 }: SolutionEditorSidebarProps) {
+  const router = useRouter();
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [showTextColorPicker, setShowTextColorPicker] = useState(false);
-  const [showHighlightColorPicker, setShowHighlightColorPicker] = useState(false);
+  const [showHighlightColorPicker, setShowHighlightColorPicker] =
+    useState(false);
   const [selectedTextColor, setSelectedTextColor] = useState("#000000");
-  const [selectedHighlightColor, setSelectedHighlightColor] = useState("#FFEB3B");
+  const [selectedHighlightColor, setSelectedHighlightColor] =
+    useState("#FFEB3B");
   const [selectedLanguage, setSelectedLanguage] = useState("javascript");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const uploadImageMutation = useUploadSolutionImage();
@@ -124,8 +148,16 @@ export function SolutionEditorSidebar({
   return (
     <div className="w-64 border-r border-gray-200 bg-gray-50 flex-shrink-0">
       <div className="sticky top-0 p-4 space-y-4 max-h-screen overflow-y-auto">
-        <h2 className="text-lg font-bold text-gray-900">Editor Tools</h2>
+        {/* Back Button */}
+        <button
+          onClick={() => router.push(ADMIN_ROUTES.SOLUTIONS)}
+          className="flex items-center text-gray-700 hover:text-gray-900 font-medium transition-colors w-full"
+        >
+          <ArrowLeft className="w-5 h-5 mr-2" />
+          Back to Solutions
+        </button>
 
+        <div className="border-t border-gray-300" />
         {/* Text Style */}
         <div className="space-y-2">
           <p className="text-xs font-semibold text-gray-700 uppercase tracking-wider">
@@ -191,7 +223,9 @@ export function SolutionEditorSidebar({
             </button>
             <button
               type="button"
-              onClick={() => editor.chain().focus().setTextAlign("center").run()}
+              onClick={() =>
+                editor.chain().focus().setTextAlign("center").run()
+              }
               className={`flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-colors ${
                 editor.isActive({ textAlign: "center" })
                   ? "bg-blue-100 text-blue-700"
@@ -289,7 +323,9 @@ export function SolutionEditorSidebar({
             <div className="relative">
               <button
                 type="button"
-                onClick={() => setShowHighlightColorPicker(!showHighlightColorPicker)}
+                onClick={() =>
+                  setShowHighlightColorPicker(!showHighlightColorPicker)
+                }
                 className="w-full flex items-center gap-2 px-3 py-2 text-sm rounded-lg hover:bg-gray-100 border border-gray-300 transition-colors"
               >
                 <Highlighter className="w-4 h-4" />
@@ -312,7 +348,11 @@ export function SolutionEditorSidebar({
                       onChange={(e) => {
                         const color = e.target.value;
                         setSelectedHighlightColor(color);
-                        editor?.chain().focus().toggleHighlight({ color }).run();
+                        editor
+                          ?.chain()
+                          .focus()
+                          .toggleHighlight({ color })
+                          .run();
                       }}
                       className="w-full h-10 rounded border border-gray-300 cursor-pointer"
                     />
@@ -328,7 +368,11 @@ export function SolutionEditorSidebar({
                           key={color}
                           type="button"
                           onClick={() => {
-                            editor.chain().focus().toggleHighlight({ color }).run();
+                            editor
+                              .chain()
+                              .focus()
+                              .toggleHighlight({ color })
+                              .run();
                             setSelectedHighlightColor(color);
                             setShowHighlightColorPicker(false);
                           }}

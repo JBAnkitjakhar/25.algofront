@@ -1,4 +1,4 @@
-// src/app/questions/[id]/page.tsx - FIXED
+// src/app/questions/[id]/page.tsx - Remove duplicate title
 
 'use client';
 
@@ -15,28 +15,25 @@ import {
   CheckCircle2, 
   Circle,
   ArrowLeft,
-  ChevronRight,
   Lightbulb,
   FileText,
-  FolderOpen,
   Check,
   X,
   Play,
   Code,
   Upload,
 } from 'lucide-react';
-import { CubeTransparentIcon } from '@heroicons/react/24/outline';
 import { QUESTION_LEVEL_LABELS, QUESTION_LEVEL_COLORS } from '@/constants';
 import { dateUtils } from '@/lib/utils/common';
 import type { SolutionSummary, ApproachDetail } from '@/having/userQuestion/types';
-import { useQuestionPageData, useUpdateQuestionProgress } from '@/having/userQuestion/hooks';
+import { 
+  useQuestionPageData, 
+  useMarkQuestionSolved, 
+  useUnmarkQuestionSolved 
+} from '@/having/userQuestion/hooks';
 import { TipTapViewer } from '@/having/userQuestion/components/TipTapViewer';
 
-// Keep existing SolutionCard component
 function SolutionCard({ solution, onClick }: { solution: SolutionSummary; onClick: () => void }) {
-  // const { data: visualizerFiles } = useVisualizerFilesBySolution(solution.id);
-  // const hasVisualizers = Boolean(visualizerFiles?.data && visualizerFiles.data.length > 0);
-
   return (
     <div
       className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
@@ -74,7 +71,7 @@ function SolutionCard({ solution, onClick }: { solution: SolutionSummary; onClic
         )}
         {solution.driveLink && (
           <span className="inline-flex items-center px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 rounded text-xs">
-            <FolderOpen className="w-3 h-3 mr-1" />
+            <Code className="w-3 h-3 mr-1" />
             Resources
           </span>
         )}
@@ -83,12 +80,6 @@ function SolutionCard({ solution, onClick }: { solution: SolutionSummary; onClic
             {solution.imageUrls.length} Image{solution.imageUrls.length !== 1 ? 's' : ''}
           </span>
         )}
-        {/* {hasVisualizers && (
-          <span className="inline-flex items-center px-1.5 py-0.5 bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-200 rounded text-xs">
-            <CubeTransparentIcon className="w-3 h-3 mr-1" />
-            Visualizer
-          </span>
-        )} */}
       </div>
     </div>
   );
@@ -105,15 +96,14 @@ function QuestionDetailContent() {
   const [selectedSolution, setSelectedSolution] = useState<SolutionSummary | null>(null);
   const [editingApproach, setEditingApproach] = useState<ApproachDetail | null>(null);
   const [leftPanelWidth, setLeftPanelWidth] = useState(50);
+  
   const isResizingRef = useRef(false);
 
-  // Fetch all data
   const { question, progress, solutions, approaches, isLoading, isError } = 
     useQuestionPageData(questionId);
-  // const { data: category } = useCategoryById(question?.categoryId || '');
-  const updateProgressMutation = useUpdateQuestionProgress();
+  const markSolvedMutation = useMarkQuestionSolved();
+  const unmarkSolvedMutation = useUnmarkQuestionSolved();
 
-  // Panel resizing
   const handlePanelMouseDown = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -147,12 +137,11 @@ function QuestionDetailContent() {
   }, [leftPanelWidth]);
 
   const handleToggleSolved = () => {
-    if (updateProgressMutation.isPending) return;
-    
-    updateProgressMutation.mutate({
-      questionId,
-      solved: !(progress?.solved || false)
-    });
+    if (progress?.solved) {
+      unmarkSolvedMutation.mutate(questionId);
+    } else {
+      markSolvedMutation.mutate(questionId);
+    }
   };
 
   const handleEditApproach = (approach: ApproachDetail) => {
@@ -188,10 +177,10 @@ function QuestionDetailContent() {
             Question Not Found
           </h3>
           <button
-            onClick={() => router.push('/questions')}
+            onClick={() => router.back()}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
           >
-            Back to Questions
+            Go Back
           </button>
         </div>
       </div>
@@ -199,6 +188,7 @@ function QuestionDetailContent() {
   }
 
   const levelColors = QUESTION_LEVEL_COLORS[question.level];
+  const isPending = markSolvedMutation.isPending || unmarkSolvedMutation.isPending;
 
   return (
     <UserLayout>
@@ -220,7 +210,6 @@ function QuestionDetailContent() {
         ) : (
           <>
             <div className="flex-1 flex min-h-0">
-              {/* Left Panel - Compiler */}
               <div
                 className="bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700"
                 style={{ width: `${leftPanelWidth}%` }}
@@ -228,7 +217,6 @@ function QuestionDetailContent() {
                 <QuestionCompilerLayout question={question} />
               </div>
 
-              {/* Resizer */}
               <div
                 className="w-1 bg-gray-300 dark:bg-gray-600 cursor-col-resize hover:bg-blue-500 dark:hover:bg-blue-400 transition-colors relative group"
                 onMouseDown={handlePanelMouseDown}
@@ -236,58 +224,46 @@ function QuestionDetailContent() {
                 <div className="absolute inset-y-0 -left-1 -right-1 group-hover:bg-blue-500/20"></div>
               </div>
 
-              {/* Right Panel - Question Info */}
               <div
                 className="flex flex-col bg-white dark:bg-gray-800"
                 style={{ width: `${100 - leftPanelWidth}%` }}
               >
-                {/* Breadcrumb */}
-                <div className="sticky top-0 z-10 bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 px-4 py-2">
-                  <div className="flex items-center space-x-1.5 text-xs text-gray-500 dark:text-gray-400">
-                    {/* {category && (
-                      <>
-                        <ChevronRight className="w-3 h-3" />
-                        <button
-                          onClick={() => router.push(`/categories/${category.id}`)}
-                          className="hover:text-gray-700 dark:hover:text-gray-300 truncate"
-                        >
-                          {category.name}
-                        </button>
-                      </>
-                    )} */}
-                    <ChevronRight className="w-3 h-3" />
-                    <span className="text-gray-900 dark:text-white font-medium truncate">
-                      {question.title}
-                    </span>
-                  </div>
+                {/* Back Button Only */}
+                <div className="sticky top-0 z-10 bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 px-4 py-3">
+                  <button
+                    onClick={() => router.back()}
+                    className="flex items-center text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
+                  >
+                    <ArrowLeft className="w-4 h-4 mr-2" />
+                    <span className="text-sm font-medium">Back</span>
+                  </button>
                 </div>
 
-                {/* Tabs */}
-                <div className="sticky top-10 z-10 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-                  <nav className="flex px-1">
-                    {[
-                      { id: 'description' as TabType, label: 'Description', icon: FileText },
-                      { id: 'solutions' as TabType, label: `Solutions (${solutions.length})`, icon: Lightbulb },
-                      { id: 'submissions' as TabType, label: `My Approaches (${approaches.length})`, icon: Upload },
-                    ].map((tab) => {
-                      const Icon = tab.icon;
-                      return (
-                        <button
-                          key={tab.id}
-                          onClick={() => setActiveTab(tab.id)}
-                          className={`flex items-center space-x-1.5 px-3 py-0.5 border-b-2 font-medium text-sm transition-colors ${
-                            activeTab === tab.id
-                              ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                              : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
-                          }`}
-                        >
-                          <Icon className="w-4 h-4" />
-                          <span>{tab.label}</span>
-                        </button>
-                      );
-                    })}
-                  </nav>
-                </div>
+                <div className="sticky top-[52px] z-10 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+  <nav className="flex px-1">
+    {[
+                     { id: 'description' as TabType, label: 'Description', icon: FileText },
+      { id: 'solutions' as TabType, label: `Solutions (${solutions.length})`, icon: Lightbulb },
+      { id: 'submissions' as TabType, label: `My Approaches (${approaches.length})`, icon: Upload },
+    ].map((tab) => {
+      const Icon = tab.icon;
+      return (
+        <button
+          key={tab.id}
+          onClick={() => setActiveTab(tab.id)}
+          className={`flex items-center space-x-1.5 px-3 py-2 border-b-2 font-medium text-sm transition-colors ${
+            activeTab === tab.id
+              ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+              : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+          }`}
+        >
+          <Icon className="w-4 h-4" />
+          <span>{tab.label}</span>
+        </button>
+      );
+    })}
+  </nav>
+</div>
 
                 {/* Content */}
                 <div className="flex-1 overflow-auto custom-scrollbar">
@@ -310,13 +286,6 @@ function QuestionDetailContent() {
                             <span className={`px-2.5 py-1 rounded-full text-sm font-medium border ${levelColors.bg} ${levelColors.text} ${levelColors.border}`}>
                               {QUESTION_LEVEL_LABELS[question.level]}
                             </span>
-                            
-                            {/* {category && (
-                              <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
-                                <FolderOpen className="w-4 h-4" />
-                                <span>{category.name}</span>
-                              </div>
-                            )} */}
 
                             {progress?.solved && progress.solvedAt && (
                               <div className="flex items-center space-x-2 text-sm text-green-600">
@@ -328,21 +297,21 @@ function QuestionDetailContent() {
 
                           <button
                             onClick={handleToggleSolved}
-                            disabled={updateProgressMutation.isPending}
-                            className={`flex items-center space-x-1 px-2 py-1 rounded-lg text-sm font-medium transition-colors ${
+                            disabled={isPending}
+                            className={`flex items-center space-x-1 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                               progress?.solved
                                 ? 'bg-red-600 hover:bg-red-700 text-white'
                                 : 'bg-green-600 hover:bg-green-700 text-white'
-                            } ${updateProgressMutation.isPending ? 'opacity-50' : ''}`}
+                            } ${isPending ? 'opacity-50 cursor-not-allowed' : ''}`}
                           >
-                            {updateProgressMutation.isPending ? (
+                            {isPending ? (
                               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
                             ) : progress?.solved ? (
                               <X className="w-4 h-4" />
                             ) : (
                               <Check className="w-4 h-4" />
                             )}
-                            <span>{updateProgressMutation.isPending ? 'Updating...' : progress?.solved ? 'Mark Unsolved' : 'Mark Solved'}</span>
+                            <span>{isPending ? 'Updating...' : progress?.solved ? 'Unmark' : 'Mark Solved'}</span>
                           </button>
                         </div>
                       </div>

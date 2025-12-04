@@ -1,4 +1,4 @@
-// src/components/admin/CourseEditor.tsx
+// src/having/courses/components/CourseEditor.tsx - FIXED
 
 'use client';
 
@@ -37,7 +37,7 @@ import markdown from 'highlight.js/lib/languages/markdown';
 import Placeholder from '@tiptap/extension-placeholder';
 import { useEffect, useState } from 'react';
 import { Loader2 } from 'lucide-react';
-import './styles/CourseEditorHighlighting.css';
+import './styles/CourseEditorHighlighting.css'; // ✅ ADD THIS
 
 // Create lowlight instance with all languages
 const lowlight = createLowlight();
@@ -93,7 +93,6 @@ export default function CourseEditor({
 }: CourseEditorProps) {
   const [isMounted, setIsMounted] = useState(false);
 
-  // Ensure we're on client side
   useEffect(() => {
     setIsMounted(true);
   }, []);
@@ -101,7 +100,7 @@ export default function CourseEditor({
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
-        codeBlock: false, // We'll use CodeBlockLowlight instead
+        codeBlock: false,
       }),
       TextStyle,
       Color,
@@ -128,7 +127,7 @@ export default function CourseEditor({
         placeholder,
       }),
     ],
-    content: content || '',
+    content: '', // ✅ CHANGED: Start with empty string
     onUpdate: ({ editor }) => {
       onChange(editor.getHTML());
     },
@@ -141,19 +140,18 @@ export default function CourseEditor({
     immediatelyRender: false,
   });
 
-  // Pass editor instance to parent when ready
   useEffect(() => {
     if (editor && onEditorReady) {
       onEditorReady(editor);
     }
   }, [editor, onEditorReady]);
 
-  // Update editor content when prop changes (only after mounted)
+  // ✅ FIXED: Use setTimeout pattern like questions/solutions
   useEffect(() => {
     if (isMounted && editor && content !== editor.getHTML()) {
       const timer = setTimeout(() => {
         editor.commands.setContent(content || '', { emitUpdate: false });
-      }, 10);
+      }, 50); // ✅ CHANGED: 10ms -> 50ms for consistency
       return () => clearTimeout(timer);
     }
   }, [content, editor, isMounted]);
@@ -168,7 +166,6 @@ export default function CourseEditor({
 
   return (
     <div className="border border-gray-300 rounded-lg overflow-hidden bg-white">
-      {/* No toolbar - all controls in left sidebar */}
       <EditorContent editor={editor} />
     </div>
   );

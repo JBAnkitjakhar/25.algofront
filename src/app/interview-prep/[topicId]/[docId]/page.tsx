@@ -1,4 +1,4 @@
-// src/app/interview-prep/[topicId]/[docId]/page.tsx
+// src/app/interview-prep/[topicId]/[docId]/page.tsx - Fixed with CSS
 
 'use client';
 
@@ -13,8 +13,6 @@ import UserLayout from '@/components/layout/UserLayout';
 import { dateUtils } from '@/lib/utils/common';
 import { Loader2Icon } from 'lucide-react';
 import { useEffect, useRef } from 'react';
-
-// Import highlight.js with common languages
 import hljs from 'highlight.js/lib/core';
 import javascript from 'highlight.js/lib/languages/javascript';
 import typescript from 'highlight.js/lib/languages/typescript';
@@ -36,12 +34,9 @@ import json from 'highlight.js/lib/languages/json';
 import bash from 'highlight.js/lib/languages/bash';
 import yaml from 'highlight.js/lib/languages/yaml';
 import markdown from 'highlight.js/lib/languages/markdown';
-
-// import '@having/courses/components/styles/CourseEditorHighlighting.css';
-
 import { useDocument } from '@/having/courses';
+import '@/having/courses/components/styles/CourseEditorHighlighting.css';
 
-// Register all languages
 hljs.registerLanguage('javascript', javascript);
 hljs.registerLanguage('js', javascript);
 hljs.registerLanguage('typescript', typescript);
@@ -84,11 +79,8 @@ function DocumentContent() {
   const contentRef = useRef<HTMLDivElement>(null);
   
   const { data: document, isLoading: isLoadingDoc } = useDocument(docId);
-  
-  // ✅ Get topic name from URL query parameter
   const topicName = searchParams.get('topicName');
 
-  // Apply syntax highlighting after content is rendered
   useEffect(() => {
     if (contentRef.current && document?.content) {
       const codeBlocks = contentRef.current.querySelectorAll('pre code');
@@ -152,20 +144,18 @@ function DocumentContent() {
   return (
     <UserLayout>
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-        {/* Header */}
         <div className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 sticky top-0 z-10">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
             <div className="flex items-center justify-between">
-              <div className="flex items-center">
+              <div className="flex items-center space-x-4">
                 <button
                   onClick={() => router.push(`/interview-prep/${topicId}`)}
-                  className="flex items-center text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mr-4"
+                  className="flex items-center text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
                 >
                   <ArrowLeftIcon className="w-5 h-5 mr-1" />
-                  Back to Documents
+                  Back
                 </button>
                 
-                {/* ✅ Display topic name from query param */}
                 {topicName && (
                   <div className="text-sm text-gray-500 dark:text-gray-400">
                     <span className="font-medium">{topicName}</span>
@@ -181,10 +171,8 @@ function DocumentContent() {
           </div>
         </div>
 
-        {/* Document Content */}
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <article className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden border border-gray-200 dark:border-gray-700">
-            {/* Document Title */}
             <div className="px-8 py-6 border-b border-gray-200 dark:border-gray-700">
               <div className="flex items-center">
                 <DocumentTextIcon className="h-6 w-6 text-gray-400 dark:text-gray-500 mr-3" />
@@ -199,7 +187,6 @@ function DocumentContent() {
               </div>
             </div>
 
-            {/* Document Body */}
             <div className="px-8 py-6">
               <div 
                 ref={contentRef}

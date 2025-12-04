@@ -18,7 +18,6 @@ import type {
 } from "@/having/adminQuestions/types";
 import {
   Loader2Icon,
-  ArrowLeftIcon,
   SaveIcon,
   HelpCircleIcon,
   AlertTriangleIcon,
@@ -363,13 +362,13 @@ export default function EditQuestionPage() {
       />
 
       <div className="flex-1 max-w-5xl mx-auto px-6 py-8 overflow-y-auto">
-        <button
+        {/* <button
           onClick={() => router.push(ADMIN_ROUTES.QUESTIONS)}
           className="flex items-center text-gray-700 hover:text-gray-900 font-medium transition-colors mb-6"
         >
           <ArrowLeftIcon className="w-5 h-5 mr-2" />
           Back to Questions
-        </button>
+        </button> */}
 
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-gray-900">Edit Question</h1>

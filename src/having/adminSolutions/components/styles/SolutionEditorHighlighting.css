@@ -1,8 +1,7 @@
-/* src/having/adminQuestions/components/styles/EditorHighlighting.css */
+/* src/having/adminSolutions/components/styles/SolutionEditorHighlighting.css */
 
-/* Code block container in the editor */
 .ProseMirror pre {
-  background: #2b2d3a !important; /* Lighter dark background like in your image */
+  background: #2b2d3a !important;
   color: #d4d4d4 !important;
   font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'Courier New', monospace;
   font-size: 14px;
@@ -21,7 +20,6 @@
   padding: 0;
 }
 
-/* Inline code */
 .ProseMirror code {
   background-color: #e0dada;
   color: #07091f;
@@ -31,7 +29,6 @@
   font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', monospace;
 }
 
-/* CENTER IMAGES - Images should be centered and on their own line */
 .ProseMirror img {
   display: block !important;
   margin-left: auto !important;
@@ -44,7 +41,6 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-/* Syntax highlighting tokens - matching VS Code dark theme */
 .hljs-comment,
 .hljs-quote {
   color: #7f848e;
@@ -94,8 +90,6 @@
   color: #c678dd;
 }
 
-/* Language-specific tokens */
-/* Java */
 .language-java .hljs-keyword {
   color: #c678dd;
 }
@@ -122,7 +116,6 @@
   font-style: italic;
 }
 
-/* JavaScript/TypeScript */
 .language-javascript .hljs-keyword,
 .language-typescript .hljs-keyword {
   color: #c678dd;
@@ -138,7 +131,6 @@
   color: #98c379;
 }
 
-/* Python */
 .language-python .hljs-keyword {
   color: #c678dd;
 }
@@ -159,7 +151,6 @@
   color: #61afef;
 }
 
-/* C/C++ */
 .language-cpp .hljs-keyword,
 .language-c .hljs-keyword {
   color: #c678dd;
@@ -170,7 +161,6 @@
   color: #e5c07b;
 }
 
-/* SQL */
 .language-sql .hljs-keyword {
   color: #c678dd;
   text-transform: uppercase;
@@ -180,7 +170,6 @@
   color: #e5c07b;
 }
 
-/* HTML/XML */
 .language-html .hljs-tag,
 .language-xml .hljs-tag {
   color: #e06c75;
@@ -196,7 +185,6 @@
   color: #98c379;
 }
 
-/* CSS */
 .language-css .hljs-selector {
   color: #e06c75;
 }
@@ -213,30 +201,10 @@
   color: #98c379;
 }
 
-/* Additional editor-specific styles */
 .ProseMirror pre.hljs {
-  background: #2b2d3a !important; /* Ensure consistent background */
+  background: #2b2d3a !important;
 }
 
-/* Code block with line numbers (optional) */
-.ProseMirror .code-block-with-line-numbers {
-  position: relative;
-  padding-left: 3.5em !important;
-}
-
-.ProseMirror .code-block-with-line-numbers::before {
-  content: counter(line);
-  counter-increment: line;
-  position: absolute;
-  left: 0;
-  width: 3em;
-  text-align: right;
-  padding-right: 0.5em;
-  color: #636d83;
-  user-select: none;
-}
-
-/* Scrollbar styling for code blocks */
 .ProseMirror pre::-webkit-scrollbar {
   height: 8px;
   width: 8px;
@@ -254,26 +222,4 @@
 
 .ProseMirror pre::-webkit-scrollbar-thumb:hover {
   background: #5a6578;
-}
-
-/* Focus styles */
-.ProseMirror pre:focus {
-  outline: 2px solid #4a5568;
-  outline-offset: 2px;
-}
-
-/* Selection in code blocks */
-.ProseMirror pre::selection,
-.ProseMirror pre *::selection {
-  background-color: rgba(61, 130, 219, 0.3);
-}
-
-/* Placeholder for empty code blocks */
-.ProseMirror pre.is-empty::before {
-  content: "// Write your code here...";
-  color: #636d83;
-  font-style: italic;
-  pointer-events: none;
-  height: 0;
-  float: left;
 }

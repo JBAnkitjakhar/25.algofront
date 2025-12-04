@@ -1,4 +1,4 @@
-// src/having/userQuestion/hooks.ts
+// src/having/userQuestion/hooks.ts - UPDATED
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { userQuestionService } from './service';
@@ -9,7 +9,6 @@ import type {
   UpdateApproachRequest,
 } from './types';
 
-// Fetch question detail
 export function useQuestionById(id: string) {
   return useQuery({
     queryKey: USER_QUESTION_QUERY_KEYS.DETAIL(id),
@@ -26,7 +25,6 @@ export function useQuestionById(id: string) {
   });
 }
 
-// Fetch question progress
 export function useQuestionProgress(questionId: string) {
   return useQuery({
     queryKey: USER_QUESTION_QUERY_KEYS.PROGRESS(questionId),
@@ -37,47 +35,66 @@ export function useQuestionProgress(questionId: string) {
       }
       return response.data!;
     },
-    staleTime: 0, // Always fresh for progress
+    staleTime: 0,
     gcTime: 5 * 60 * 1000,
     enabled: !!questionId,
   });
 }
 
-// Update question progress
-export function useUpdateQuestionProgress() {
+export function useMarkQuestionSolved() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ questionId, solved }: { questionId: string; solved: boolean }) => {
-      const response = await userQuestionService.updateQuestionProgress(questionId, solved);
+    mutationFn: async (questionId: string) => {
+      const response = await userQuestionService.markQuestionSolved(questionId);
       if (!response.success) {
-        throw new Error(response.error || 'Failed to update progress');
+        throw new Error(response.error || response.message || 'Failed to mark as solved');
       }
-      return response.data!;
     },
     
-    onSuccess: (data, { questionId }) => {
-      // Update progress cache
-      queryClient.setQueryData(
-        USER_QUESTION_QUERY_KEYS.PROGRESS(questionId),
-        data
-      );
-
-      // Invalidate user progress stats
+    onSuccess: (_, questionId) => {
+      queryClient.invalidateQueries({ 
+        queryKey: USER_QUESTION_QUERY_KEYS.PROGRESS(questionId) 
+      });
       queryClient.invalidateQueries({ 
         queryKey: ['userProgress', 'currentStats'] 
       });
-
-      toast.success(data.solved ? 'Marked as solved ✓' : 'Marked as unsolved');
+      toast.success('Question marked as solved ✓');
     },
     
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to update progress');
+      toast.error(error.message);
     },
   });
 }
 
-// Fetch solutions by question
+export function useUnmarkQuestionSolved() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (questionId: string) => {
+      const response = await userQuestionService.unmarkQuestionSolved(questionId);
+      if (!response.success) {
+        throw new Error(response.error || response.message || 'Failed to unmark');
+      }
+    },
+    
+    onSuccess: (_, questionId) => {
+      queryClient.invalidateQueries({ 
+        queryKey: USER_QUESTION_QUERY_KEYS.PROGRESS(questionId) 
+      });
+      queryClient.invalidateQueries({ 
+        queryKey: ['userProgress', 'currentStats'] 
+      });
+      toast.success('Question unmarked');
+    },
+    
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
+  });
+}
+
 export function useSolutionsByQuestion(questionId: string) {
   return useQuery({
     queryKey: USER_QUESTION_QUERY_KEYS.SOLUTIONS(questionId),
@@ -94,7 +111,6 @@ export function useSolutionsByQuestion(questionId: string) {
   });
 }
 
-// Fetch approaches by question
 export function useApproachesByQuestion(questionId: string) {
   return useQuery({
     queryKey: USER_QUESTION_QUERY_KEYS.APPROACHES(questionId),
@@ -105,13 +121,12 @@ export function useApproachesByQuestion(questionId: string) {
       }
       return response.data || [];
     },
-    staleTime: 0, // Always fresh for user's own approaches
+    staleTime: 0,
     gcTime: 5 * 60 * 1000,
     enabled: !!questionId,
   });
 }
 
-// Fetch approach detail
 export function useApproachDetail(questionId: string, approachId: string) {
   return useQuery({
     queryKey: USER_QUESTION_QUERY_KEYS.APPROACH_DETAIL(questionId, approachId),
@@ -128,7 +143,6 @@ export function useApproachDetail(questionId: string, approachId: string) {
   });
 }
 
-// Create approach
 export function useCreateApproach() {
   const queryClient = useQueryClient();
 
@@ -160,7 +174,6 @@ export function useCreateApproach() {
   });
 }
 
-// Update approach
 export function useUpdateApproach() {
   const queryClient = useQueryClient();
 
@@ -182,17 +195,13 @@ export function useUpdateApproach() {
     },
     
     onSuccess: (newData, { questionId, approachId }) => {
-      // Update approach detail cache
       queryClient.setQueryData(
         USER_QUESTION_QUERY_KEYS.APPROACH_DETAIL(questionId, approachId),
         newData
       );
-
-      // Invalidate approaches list
       queryClient.invalidateQueries({
         queryKey: USER_QUESTION_QUERY_KEYS.APPROACHES(questionId),
       });
-
       toast.success('Approach updated successfully!');
     },
     
@@ -202,7 +211,6 @@ export function useUpdateApproach() {
   });
 }
 
-// Delete approach
 export function useDeleteApproach() {
   const queryClient = useQueryClient();
 
@@ -227,7 +235,6 @@ export function useDeleteApproach() {
   });
 }
 
-// Combined hook for question page data
 export function useQuestionPageData(questionId: string) {
   const question = useQuestionById(questionId);
   const progress = useQuestionProgress(questionId);
