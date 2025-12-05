@@ -1,7 +1,7 @@
-// src/having/userQuestion/service.ts - UPDATED
+// src/having/userQuestion/service.ts
 
-import { apiClient } from '@/lib/api/client';
-import type { ApiResponse } from '@/types';
+import { apiClient } from "@/lib/api/client";
+import type { ApiResponse } from "@/types";
 import type {
   QuestionDetail,
   UserQuestionProgress,
@@ -10,14 +10,16 @@ import type {
   ApproachDetail,
   CreateApproachRequest,
   UpdateApproachRequest,
-} from './types';
+} from "./types";
 
 class UserQuestionService {
   async getQuestionById(id: string): Promise<ApiResponse<QuestionDetail>> {
     return apiClient.get<QuestionDetail>(`/questions/${id}`);
   }
 
-  async getQuestionProgress(questionId: string): Promise<ApiResponse<UserQuestionProgress>> {
+  async getQuestionProgress(
+    questionId: string
+  ): Promise<ApiResponse<UserQuestionProgress>> {
     return apiClient.get<UserQuestionProgress>(
       `/user/me/progress/${questionId}`
     );
@@ -31,20 +33,24 @@ class UserQuestionService {
     return apiClient.delete<void>(`/user/me/unmark/${questionId}`);
   }
 
-  async getSolutionsByQuestion(questionId: string): Promise<ApiResponse<SolutionSummary[]>> {
+  async getSolutionsByQuestion(
+    questionId: string
+  ): Promise<ApiResponse<SolutionSummary[]>> {
     return apiClient.get<SolutionSummary[]>(
       `/solutions/question/${questionId}`
     );
   }
 
-  async getApproachesByQuestion(questionId: string): Promise<ApiResponse<ApproachMetadata[]>> {
+  async getApproachesByQuestion(
+    questionId: string
+  ): Promise<ApiResponse<ApproachMetadata[]>> {
     return apiClient.get<ApproachMetadata[]>(
       `/approaches/question/${questionId}`
     );
   }
 
   async getApproachDetail(
-    questionId: string, 
+    questionId: string,
     approachId: string
   ): Promise<ApiResponse<ApproachDetail>> {
     return apiClient.get<ApproachDetail>(
@@ -56,10 +62,19 @@ class UserQuestionService {
     questionId: string,
     data: CreateApproachRequest
   ): Promise<ApiResponse<ApproachDetail>> {
-    return apiClient.post<ApproachDetail>(
+    // console.log("📡 Creating approach:", {
+    //   questionId,
+    //   data,
+    //   url: `/approaches/question/${questionId}`,
+    // });
+
+    const response = await apiClient.post<ApproachDetail>(
       `/approaches/question/${questionId}`,
       data
     );
+
+    // console.log("📡 Create approach response:", response);
+    return response;
   }
 
   async updateApproach(
@@ -73,10 +88,20 @@ class UserQuestionService {
     );
   }
 
-  async deleteApproach(questionId: string, approachId: string): Promise<ApiResponse<void>> {
+  async deleteApproach(
+    questionId: string,
+    approachId: string
+  ): Promise<ApiResponse<void>> {
     return apiClient.delete<void>(
       `/approaches/question/${questionId}/${approachId}`
     );
+  }
+
+  // ✅ Only content URL - no metadata
+  getVisualizerContentUrl(fileId: string): string {
+    return `${
+      process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080/api"
+    }/files/visualizers/${fileId}`;
   }
 }
 

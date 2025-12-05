@@ -82,7 +82,7 @@ export function QuestionEditorSidebar({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    console.log("🔍 Step 1: File selected:", file.name);
+    // console.log("🔍 Step 1: File selected:", file.name);
 
     if (!file.type.startsWith("image/")) {
       toast.error("Please select a valid image file");
@@ -105,16 +105,16 @@ export function QuestionEditorSidebar({
       return;
     }
 
-    console.log("🔍 Step 2: Editor check passed, editor exists:", !!editor);
+    // console.log("🔍 Step 2: Editor check passed, editor exists:", !!editor);
 
     setIsUploadingImage(true);
 
     try {
       const result = await uploadImageMutation.mutateAsync(file);
-      console.log("🔍 Step 3: Upload response:", result);
+      // console.log("🔍 Step 3: Upload response:", result);
 
       if (result.secure_url) {
-        console.log("🔍 Step 4: Inserting image with URL:", result.secure_url);
+        // console.log("🔍 Step 4: Inserting image with URL:", result.secure_url);
 
         // ✅ Double check editor still exists
         if (!editor) {
@@ -137,7 +137,7 @@ export function QuestionEditorSidebar({
             })
             .run();
 
-          console.log("🔍 Step 5: Image inserted successfully");
+          // console.log("🔍 Step 5: Image inserted successfully");
 
           // Add line break after image
           editor.chain().focus().insertContent("<p></p>").run();
@@ -153,7 +153,7 @@ export function QuestionEditorSidebar({
 
         // ✅ Notify parent component
         if (onImageUpload) {
-          console.log("🔍 Step 6: Calling onImageUpload");
+          // console.log("🔍 Step 6: Calling onImageUpload");
           onImageUpload(result.secure_url);
         }
 

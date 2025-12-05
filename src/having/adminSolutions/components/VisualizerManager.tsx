@@ -2,11 +2,10 @@
 
 "use client";
 
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback } from "react";
 import {
   CubeTransparentIcon,
   TrashIcon,
-  ArrowsPointingOutIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 import {
@@ -16,22 +15,15 @@ import {
   TransitionChild,
 } from "@headlessui/react";
 import { Fragment } from "react";
-import { useUploadVisualizerFile, useDeleteVisualizerFile } from "../hooks";
-import { adminSolutionsService } from "../service";
+import {
+  useVisualizerMetadata,
+  useVisualizerContent,
+  useUploadVisualizerFile,
+  useDeleteVisualizerFile,
+} from "../hooks";
 import { SOLUTION_VALIDATION } from "../constants";
 import toast from "react-hot-toast";
-import { EmbeddedVisualizer } from "@/components/common/EmbeddedVisualizer";
-
-interface VisualizerFileMetadata {
-  fileId: string;
-  filename: string;
-  originalFileName: string;
-  size: number;
-  uploadDate: string;
-  contentType?: string;
-  isInteractive?: boolean;
-  solutionId?: string;
-}
+import { useQueryClient } from "@tanstack/react-query";
 
 interface VisualizerManagerProps {
   solutionId?: string;
@@ -45,65 +37,28 @@ export function VisualizerManager({
   onVisualizerFileIdsChange,
 }: VisualizerManagerProps) {
   const [dragActive, setDragActive] = useState(false);
-  const [selectedVisualizerForPopup, setSelectedVisualizerForPopup] = useState<{
-    fileId: string;
-    title: string;
-  } | null>(null);
-  const [visualizerFiles, setVisualizerFiles] = useState<
-    VisualizerFileMetadata[]
-  >([]);
-  const [isLoadingFiles, setIsLoadingFiles] = useState(false);
+  const [selectedVisualizerForPopup, setSelectedVisualizerForPopup] = useState<
+    string | null
+  >(null);
   const htmlFileInputRef = useRef<HTMLInputElement>(null);
+
+  // ✅ Only fetch metadata for files we have
+  const { data: visualizerFiles = [], isLoading: isLoadingMetadata } =
+    useVisualizerMetadata(visualizerFileIds);
+
+  // ✅ Only fetch content when popup opens (lazy loading)
+  const { data: popupContent, isLoading: isLoadingContent } =
+    useVisualizerContent(
+      selectedVisualizerForPopup || "",
+      !!selectedVisualizerForPopup // Only enabled when popup is open
+    );
 
   const uploadVisualizerMutation = useUploadVisualizerFile();
   const deleteVisualizerMutation = useDeleteVisualizerFile();
-
+  const queryClient = useQueryClient();
   const currentVisualizerCount = visualizerFileIds.length;
 
-  useEffect(() => {
-    const fetchVisualizerMetadata = async () => {
-      if (!solutionId || visualizerFileIds.length === 0) {
-        setVisualizerFiles([]);
-        return;
-      }
-
-      setIsLoadingFiles(true);
-
-      try {
-        const metadataPromises = visualizerFileIds.map(async (fileId) => {
-          try {
-            const response = await adminSolutionsService.getVisualizerMetadata(
-              fileId
-            );
-
-            // ✅ FIX: Data is nested twice - response.data.data
-            if (response.success && response.data?.data) {
-              return response.data.data as VisualizerFileMetadata;
-            }
-            return null;
-          } catch (error) {
-            console.error("❌ Fetch error:", error);
-            return null;
-          }
-        });
-
-        const results = await Promise.all(metadataPromises);
-        const validFiles = results.filter(
-          (file): file is VisualizerFileMetadata => file !== null
-        );
-
-        setVisualizerFiles(validFiles);
-      } catch (error) {
-        console.error("❌ Error:", error);
-        toast.error("Failed to load visualizer files");
-      } finally {
-        setIsLoadingFiles(false);
-      }
-    };
-
-    fetchVisualizerMetadata();
-  }, [solutionId, visualizerFileIds]);
-
+  // ✅ Upload handler - optimistically update parent state
   const handleVisualizerUpload = useCallback(
     async (files: FileList | File[]) => {
       if (!solutionId) {
@@ -124,16 +79,12 @@ export function VisualizerManager({
       const maxVisualizers = SOLUTION_VALIDATION.MAX_VISUALIZERS_PER_SOLUTION;
 
       if (currentVisualizerCount >= maxVisualizers) {
-        toast.error(
-          `Maximum ${maxVisualizers} HTML visualizers already uploaded. Delete existing files to add new ones.`
-        );
+        toast.error(`Maximum ${maxVisualizers} HTML visualizers already uploaded.`);
         return;
       }
 
       if (currentVisualizerCount + htmlFiles.length > maxVisualizers) {
-        toast.error(
-          `Cannot upload ${htmlFiles.length} files. Maximum ${maxVisualizers} visualizers allowed. You currently have ${currentVisualizerCount}.`
-        );
+        toast.error(`Cannot upload ${htmlFiles.length} files. Maximum ${maxVisualizers} allowed.`);
         return;
       }
 
@@ -142,11 +93,7 @@ export function VisualizerManager({
 
       for (const file of htmlFiles) {
         if (file.size > SOLUTION_VALIDATION.MAX_VISUALIZER_SIZE) {
-          toast.error(
-            `${file.name} exceeds maximum size of ${
-              SOLUTION_VALIDATION.MAX_VISUALIZER_SIZE / 1024
-            }KB`
-          );
+          toast.error(`${file.name} exceeds maximum size`);
           continue;
         }
 
@@ -159,15 +106,26 @@ export function VisualizerManager({
           if (result.fileId) {
             uploadedCount++;
             newFileIds.push(result.fileId);
+            // console.log(`✅ Uploaded ${file.name}, fileId: ${result.fileId}`);
           }
         } catch (error) {
+          console.error("❌ Upload error:", error);
           toast.error(`Failed to upload ${file.name}`);
         }
       }
 
       if (uploadedCount > 0) {
         const updatedFileIds = [...visualizerFileIds, ...newFileIds];
+        // console.log(`📤 Updating parent with new fileIds:`, updatedFileIds);
+        
+        // ✅ Update parent state
         onVisualizerFileIdsChange(updatedFileIds);
+        
+        // ✅ Manually refetch the query with new fileIds to show real-time update
+        await queryClient.refetchQueries({
+          queryKey: ["visualizers", "metadata", ...updatedFileIds.sort()],
+        });
+
         toast.success(`Successfully uploaded ${uploadedCount} visualizer(s)`);
       }
     },
@@ -177,7 +135,38 @@ export function VisualizerManager({
       visualizerFileIds,
       uploadVisualizerMutation,
       onVisualizerFileIdsChange,
+      queryClient, // ✅ Add to deps
     ]
+  );
+
+  // ✅ Delete handler - optimistically remove from UI (no refetch needed)
+  const handleRemoveVisualizerFile = useCallback(
+    async (fileId: string) => {
+      if (!confirm("Are you sure you want to delete this visualizer?")) {
+        return;
+      }
+
+      try {
+        // console.log(`🗑️ Deleting visualizer: ${fileId}`);
+
+        // ✅ First update UI optimistically
+        const updatedFileIds = visualizerFileIds.filter((id) => id !== fileId);
+        onVisualizerFileIdsChange(updatedFileIds);
+
+        // ✅ Then call API
+        await deleteVisualizerMutation.mutateAsync(fileId);
+
+        // console.log(`✅ Deleted ${fileId}, remaining:`, updatedFileIds);
+        toast.success("Visualizer deleted successfully");
+      } catch (error) {
+        console.error("❌ Delete error:", error);
+
+        // ✅ Rollback on error
+        toast.error("Failed to delete visualizer");
+        onVisualizerFileIdsChange(visualizerFileIds); // Restore
+      }
+    },
+    [deleteVisualizerMutation, visualizerFileIds, onVisualizerFileIdsChange]
   );
 
   const handleDrag = useCallback((e: React.DragEvent) => {
@@ -203,26 +192,6 @@ export function VisualizerManager({
     [handleVisualizerUpload]
   );
 
-  const handleRemoveVisualizerFile = useCallback(
-    async (fileId: string) => {
-      if (!confirm("Are you sure you want to delete this visualizer?")) {
-        return;
-      }
-
-      try {
-        await deleteVisualizerMutation.mutateAsync(fileId);
-
-        const updatedFileIds = visualizerFileIds.filter((id) => id !== fileId);
-        onVisualizerFileIdsChange(updatedFileIds);
-
-        toast.success("Visualizer deleted successfully");
-      } catch (error) {
-        toast.error("Failed to delete visualizer");
-      }
-    },
-    [deleteVisualizerMutation, visualizerFileIds, onVisualizerFileIdsChange]
-  );
-
   const handleFileInputChange = async (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
@@ -232,19 +201,20 @@ export function VisualizerManager({
     }
   };
 
-  const openPopup = (fileId: string, title: string) => {
-    setSelectedVisualizerForPopup({ fileId, title });
+  // ✅ Only fetch content when popup opens
+  const openPopup = (fileId: string) => {
+    // console.log(`👁️ Opening popup for: ${fileId}`);
+    setSelectedVisualizerForPopup(fileId);
   };
 
   const closePopup = () => {
+    // console.log(`❌ Closing popup`);
     setSelectedVisualizerForPopup(null);
   };
 
   const formatDate = (dateString: string) => {
-    if (!dateString) return "Invalid Date";
     try {
       const date = new Date(dateString);
-      if (isNaN(date.getTime())) return "Invalid Date";
       return date.toLocaleDateString("en-US", {
         year: "numeric",
         month: "short",
@@ -256,9 +226,6 @@ export function VisualizerManager({
   };
 
   const formatSize = (bytes: number) => {
-    if (isNaN(bytes) || bytes === null || bytes === undefined) {
-      return "N/A";
-    }
     return (bytes / 1024).toFixed(1) + " KB";
   };
 
@@ -275,14 +242,14 @@ export function VisualizerManager({
   return (
     <>
       <div className="space-y-6">
+        {/* Upload Section */}
         <div className="mb-4">
           <label className="block text-sm font-medium text-gray-700 mb-2">
             <CubeTransparentIcon className="h-4 w-4 inline mr-1" />
             HTML Visualizers (Max 2 files)
           </label>
           <div className="text-sm text-gray-600 mb-4">
-            Upload interactive HTML files to visualize algorithms. Files will be
-            embedded and displayed within our website.
+            Upload interactive HTML files to visualize algorithms.
           </div>
 
           <div className="flex gap-2 items-center">
@@ -293,7 +260,7 @@ export function VisualizerManager({
                 currentVisualizerCount >= 2 ||
                 uploadVisualizerMutation.isPending
               }
-              className="inline-flex items-center px-3 py-2 border border-gray-300 rounded text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex items-center px-3 py-2 border border-gray-300 rounded text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               <CubeTransparentIcon className="h-4 w-4 mr-2" />
               {uploadVisualizerMutation.isPending
@@ -309,14 +276,16 @@ export function VisualizerManager({
           </div>
         </div>
 
-        {isLoadingFiles && (
+        {/* Loading State */}
+        {isLoadingMetadata && visualizerFileIds.length > 0 && (
           <div className="text-center py-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
             <p className="mt-2 text-sm text-gray-600">Loading visualizers...</p>
           </div>
         )}
 
-        {!isLoadingFiles && visualizerFiles.length > 0 && (
+        {/* Visualizer List */}
+        {!isLoadingMetadata && visualizerFiles.length > 0 && (
           <div className="space-y-4">
             <h4 className="text-sm font-medium text-gray-700">
               Uploaded Visualizers ({visualizerFiles.length}/2)
@@ -344,16 +313,10 @@ export function VisualizerManager({
                   <div className="flex items-center space-x-2">
                     <button
                       type="button"
-                      onClick={() =>
-                        openPopup(
-                          file.fileId,
-                          file.originalFileName || file.filename || "Visualizer"
-                        )
-                      }
+                      onClick={() => openPopup(file.fileId)}
                       className="inline-flex items-center px-3 py-1.5 border border-blue-300 rounded text-xs font-medium text-blue-700 bg-white hover:bg-blue-50 transition-colors"
-                      title="View in popup"
                     >
-                      <ArrowsPointingOutIcon className="h-3 w-3 mr-1" />
+                      <CubeTransparentIcon className="h-3 w-3 mr-1" />
                       View
                     </button>
                     <button
@@ -361,10 +324,11 @@ export function VisualizerManager({
                       onClick={() => handleRemoveVisualizerFile(file.fileId)}
                       disabled={deleteVisualizerMutation.isPending}
                       className="inline-flex items-center px-3 py-1.5 border border-red-300 rounded text-xs font-medium text-red-700 bg-white hover:bg-red-50 disabled:opacity-50 transition-colors"
-                      title="Delete visualizer"
                     >
                       <TrashIcon className="h-3 w-3 mr-1" />
-                      Delete
+                      {deleteVisualizerMutation.isPending
+                        ? "Deleting..."
+                        : "Delete"}
                     </button>
                   </div>
                 </div>
@@ -373,31 +337,43 @@ export function VisualizerManager({
           </div>
         )}
 
-        {!isLoadingFiles &&
+        {/* Empty State */}
+        {!isLoadingMetadata &&
           visualizerFiles.length === 0 &&
-          currentVisualizerCount === 0 && (
+          visualizerFileIds.length === 0 && (
             <div className="text-center py-8 text-gray-500">
               <CubeTransparentIcon className="h-12 w-12 mx-auto text-gray-400 mb-2" />
               <p className="text-sm">No visualizers uploaded yet</p>
             </div>
           )}
 
-        {!isLoadingFiles &&
+        {/* Error State - fileIds exist but metadata loading failed */}
+        {!isLoadingMetadata &&
           visualizerFiles.length === 0 &&
-          currentVisualizerCount > 0 && (
-            <div className="text-center py-8 text-amber-600">
-              <CubeTransparentIcon className="h-12 w-12 mx-auto mb-2" />
-              <p className="text-sm">
-                Found {currentVisualizerCount} visualizer(s) but failed to load
-                metadata
-              </p>
+          visualizerFileIds.length > 0 && (
+            <div className="text-center py-8">
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 inline-block">
+                <CubeTransparentIcon className="h-8 w-8 mx-auto text-amber-600 mb-2" />
+                <p className="text-sm text-amber-800">
+                  Found {visualizerFileIds.length} visualizer(s) but failed to
+                  load metadata
+                </p>
+                <p className="text-xs text-amber-600 mt-1">
+                  Try refreshing the page
+                </p>
+              </div>
             </div>
           )}
 
+        {/* Drag & Drop Zone */}
         <div
           className={`mt-4 border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
             dragActive ? "border-blue-400 bg-blue-50" : "border-gray-300"
-          } ${currentVisualizerCount >= 2 ? "opacity-50" : ""}`}
+          } ${
+            currentVisualizerCount >= 2
+              ? "opacity-50 cursor-not-allowed"
+              : "cursor-pointer"
+          }`}
           onDragEnter={handleDrag}
           onDragLeave={handleDrag}
           onDragOver={handleDrag}
@@ -407,7 +383,7 @@ export function VisualizerManager({
           <p className="mt-2 text-sm text-gray-600">
             {currentVisualizerCount >= 2
               ? "Maximum 2 visualizers reached"
-              : "Drag and drop HTML files here, or click upload button"}
+              : "Drag and drop HTML files here"}
           </p>
           <p className="text-xs text-gray-500 mt-1">
             HTML files only • Max 500KB per file
@@ -424,7 +400,7 @@ export function VisualizerManager({
         />
       </div>
 
-      {/* Fullscreen Popup Modal */}
+      {/* ✅ Fullscreen Viewer Modal with Loading State */}
       <Transition appear show={!!selectedVisualizerForPopup} as={Fragment}>
         <Dialog as="div" className="relative z-50" onClose={closePopup}>
           <TransitionChild
@@ -450,11 +426,38 @@ export function VisualizerManager({
                 leaveFrom="opacity-100 scale-100"
                 leaveTo="opacity-0 scale-95"
               >
-                <DialogPanel className="w-full h-full max-w-7xl max-h-[90vh] transform overflow-hidden rounded-2xl bg-white shadow-xl transition-all">
+                <DialogPanel className="w-full h-full max-w-7xl max-h-[90vh] transform overflow-hidden rounded-2xl bg-white shadow-xl">
                   <div className="bg-gray-50 px-6 py-4 flex items-center justify-between border-b border-gray-200">
                     <h3 className="text-lg font-medium text-gray-900 flex items-center">
                       <CubeTransparentIcon className="h-5 w-5 mr-2 text-blue-600" />
-                      {selectedVisualizerForPopup?.title || "Visualizer"}
+                      {visualizerFiles.find(
+                        (f) => f.fileId === selectedVisualizerForPopup
+                      )?.originalFileName || "Visualizer"}
+                      {isLoadingContent && (
+                        <span className="ml-3 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                          <svg
+                            className="animate-spin -ml-1 mr-2 h-3 w-3 text-blue-600"
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                          >
+                            <circle
+                              className="opacity-25"
+                              cx="12"
+                              cy="12"
+                              r="10"
+                              stroke="currentColor"
+                              strokeWidth="4"
+                            ></circle>
+                            <path
+                              className="opacity-75"
+                              fill="currentColor"
+                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                            ></path>
+                          </svg>
+                          Loading...
+                        </span>
+                      )}
                     </h3>
                     <button
                       onClick={closePopup}
@@ -469,23 +472,34 @@ export function VisualizerManager({
                     className="h-full bg-white"
                     style={{ height: "calc(90vh - 80px)" }}
                   >
-                    {selectedVisualizerForPopup && (
-                      <EmbeddedVisualizer
-                        fileId={selectedVisualizerForPopup.fileId}
-                        title={selectedVisualizerForPopup.title}
-                        height="100%"
-                        onError={(error) => {
-                          console.error("❌ Visualizer error:", error);
-                          toast.error("Failed to load visualizer");
-                        }}
-                        onFileNotFound={() => {
-                          const updatedFileIds = visualizerFileIds.filter(
-                            (id) => id !== selectedVisualizerForPopup.fileId
-                          );
-                          onVisualizerFileIdsChange(updatedFileIds);
-                          closePopup();
-                        }}
+                    {isLoadingContent ? (
+                      <div className="flex flex-col items-center justify-center h-full">
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-blue-600 mb-4"></div>
+                        <p className="text-sm text-gray-600">
+                          Loading visualizer content...
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          This may take a moment
+                        </p>
+                      </div>
+                    ) : popupContent ? (
+                      <iframe
+                        key={selectedVisualizerForPopup}
+                        srcDoc={popupContent}
+                        title="Visualizer"
+                        className="w-full h-full border-0"
+                        sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals"
                       />
+                    ) : (
+                      <div className="flex flex-col items-center justify-center h-full text-gray-500">
+                        <CubeTransparentIcon className="h-12 w-12 text-gray-400 mb-2" />
+                        <p className="text-sm font-medium">
+                          Failed to load visualizer
+                        </p>
+                        <p className="text-xs text-gray-400 mt-1">
+                          Try refreshing the page
+                        </p>
+                      </div>
                     )}
                   </div>
                 </DialogPanel>

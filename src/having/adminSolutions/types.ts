@@ -1,4 +1,4 @@
-// src/having/adminSolutions/types.ts - Remove VisualizerFilesResponse
+// src/having/adminSolutions/types.ts
 
 export interface SolutionSummary {
   id: string;
@@ -88,7 +88,6 @@ export interface SolutionWithQuestion extends SolutionSummary {
   categoryId: string;
 }
 
-// ✅ Individual visualizer file metadata (from GET /visualizers/{fileId}/metadata)
 export interface VisualizerFileMetadata {
   fileId: string;
   filename: string;

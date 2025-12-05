@@ -30,24 +30,6 @@ export const COMPILER_ENDPOINTS = {
   HEALTH: `${API_BASE_URL}/compiler/health`,
 } as const;
 
-// File upload endpoints
-export const FILE_ENDPOINTS = {
-  CONFIG: `${API_BASE_URL}/files/config`,
-  UPLOAD_QUESTION_IMAGE: `${API_BASE_URL}/files/images/questions`,
-  UPLOAD_SOLUTION_IMAGE: `${API_BASE_URL}/files/images/solutions`,
-  DELETE_IMAGE: `${API_BASE_URL}/files/images`,
-  HEALTH_CHECK: `${API_BASE_URL}/files/health/cloudinary`,
-  // Visualizer endpoints
-  UPLOAD_VISUALIZER: (solutionId: string) =>
-    `${API_BASE_URL}/files/visualizers/${solutionId}`,
-  GET_VISUALIZER: (fileId: string) =>
-    `${API_BASE_URL}/files/visualizers/${fileId}`,
-  DELETE_VISUALIZER: (fileId: string) =>
-    `${API_BASE_URL}/files/visualizers/${fileId}`,
-  VISUALIZERS_BY_SOLUTION: (solutionId: string) =>
-    `${API_BASE_URL}/files/solutions/${solutionId}/visualizers`,
-} as const;
-
 // Routes
 export const ROUTES = {
   HOME: "/",

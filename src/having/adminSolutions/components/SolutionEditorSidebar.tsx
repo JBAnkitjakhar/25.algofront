@@ -4,6 +4,7 @@
 
 import { Editor } from "@tiptap/react";
 import { useState, useRef } from "react";
+import { useRouter } from "next/navigation";
 import {
   Bold,
   Italic,
@@ -18,10 +19,12 @@ import {
   Redo,
   Palette,
   Highlighter,
+  ArrowLeftIcon,
 } from "lucide-react";
 import { useUploadSolutionImage } from "../hooks";
 import toast from "react-hot-toast";
 import { PROGRAMMING_LANGUAGES, SOLUTION_VALIDATION } from "../constants";
+import { ADMIN_ROUTES } from "@/constants";
 
 const COLORS = [
   "#000000",
@@ -63,6 +66,7 @@ export function SolutionEditorSidebar({
   editor,
   onImageUpload,
 }: SolutionEditorSidebarProps) {
+  const router = useRouter();
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [showTextColorPicker, setShowTextColorPicker] = useState(false);
   const [showHighlightColorPicker, setShowHighlightColorPicker] =
@@ -146,9 +150,14 @@ export function SolutionEditorSidebar({
     <div className="w-64 border-r border-gray-200 bg-gray-50 flex-shrink-0">
       <div className="sticky top-0 p-4 space-y-4 max-h-screen overflow-y-auto">
         {/* Header */}
-        <div className="pb-2 border-b border-gray-300">
-          <h3 className="text-sm font-semibold text-gray-900">Editor Tools</h3>
-          <p className="text-xs text-gray-500 mt-1">Format your solution content</p>
+        <div className=" border-b border-gray-300">
+           <button
+          onClick={() => router.push(ADMIN_ROUTES.SOLUTIONS)}
+          className="flex items-center text-gray-700 hover:text-gray-900 font-medium transition-colors mb-2"
+        >
+          <ArrowLeftIcon className="w-5 h-5 mr-2" />
+          Back to Solutions
+        </button>
         </div>
 
         {/* Text Style */}

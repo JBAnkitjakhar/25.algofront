@@ -7,14 +7,18 @@ import { useRouter, useParams } from "next/navigation";
 import { Editor } from "@tiptap/react";
 import {
   Loader2Icon,
-  ArrowLeftIcon,
   SaveIcon,
   HelpCircleIcon,
   AlertTriangleIcon,
   XIcon,
   ImageIcon,
 } from "lucide-react";
-import { SolutionEditorSidebar, SolutionContentArea, LinksManager, CodeSnippetsManager } from "@/having/adminSolutions/components";
+import {
+  SolutionEditorSidebar,
+  SolutionContentArea,
+  LinksManager,
+  CodeSnippetsManager,
+} from "@/having/adminSolutions/components";
 import {
   useSolutionDetail,
   useUpdateSolution,
@@ -70,13 +74,16 @@ export default function EditSolutionPage() {
   }, [solution, isInitialized]);
 
   // Extract images from HTML content
-  const extractImagesFromContent = useCallback((htmlContent: string): string[] => {
-    if (typeof window === "undefined") return [];
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(htmlContent, "text/html");
-    const images = doc.querySelectorAll("img");
-    return Array.from(images).map((img) => img.src);
-  }, []);
+  const extractImagesFromContent = useCallback(
+    (htmlContent: string): string[] => {
+      if (typeof window === "undefined") return [];
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(htmlContent, "text/html");
+      const images = doc.querySelectorAll("img");
+      return Array.from(images).map((img) => img.src);
+    },
+    []
+  );
 
   // Handle image upload callback from sidebar
   const handleImageUpload = useCallback((imageUrl: string) => {
@@ -197,7 +204,9 @@ export default function EditSolutionPage() {
     }
 
     if (formData.codeSnippet) {
-      if (formData.codeSnippet.code.length > SOLUTION_VALIDATION.CODE_MAX_LENGTH) {
+      if (
+        formData.codeSnippet.code.length > SOLUTION_VALIDATION.CODE_MAX_LENGTH
+      ) {
         errors.push(
           `Code snippet exceeds maximum ${SOLUTION_VALIDATION.CODE_MAX_LENGTH} characters`
         );
@@ -228,10 +237,12 @@ export default function EditSolutionPage() {
     // Check if anything changed
     const hasChanges =
       updatedFormData.content !== solution?.content ||
-      JSON.stringify(updatedFormData.codeSnippet) !== JSON.stringify(solution?.codeSnippet) ||
+      JSON.stringify(updatedFormData.codeSnippet) !==
+        JSON.stringify(solution?.codeSnippet) ||
       updatedFormData.youtubeLink !== solution?.youtubeLink ||
       updatedFormData.driveLink !== solution?.driveLink ||
-      JSON.stringify(updatedFormData.visualizerFileIds) !== JSON.stringify(solution?.visualizerFileIds);
+      JSON.stringify(updatedFormData.visualizerFileIds) !==
+        JSON.stringify(solution?.visualizerFileIds);
 
     if (!hasChanges) {
       setErrors(["No changes detected"]);
@@ -264,17 +275,31 @@ export default function EditSolutionPage() {
     setContentCharCount(content.trim().length);
   }, []);
 
+  // ✅ Handle visualizer file IDs change (crucial for reactivity)
+  const handleVisualizerFileIdsChange = useCallback((fileIds: string[]) => {
+    // console.log("🔄 Parent received new visualizer fileIds:", fileIds);
+    setFormData((prev) => {
+      const updated = {
+        ...prev,
+        visualizerFileIds: fileIds,
+      };
+      // console.log("📝 Updated formData:", updated);
+      return updated;
+    });
+  }, []);
+
   // Handle YouTube link validation with error display
   const handleYoutubeLinkChange = (link: string) => {
-  updateFormData("youtubeLink", link.trim() || undefined);
-};
+    updateFormData("youtubeLink", link.trim() || undefined);
+  };
 
-const handleDriveLinkChange = (link: string) => {
-  updateFormData("driveLink", link.trim() || undefined);
-};
+  const handleDriveLinkChange = (link: string) => {
+    updateFormData("driveLink", link.trim() || undefined);
+  };
 
   const isOverLimit = contentCharCount > SOLUTION_VALIDATION.CONTENT_MAX_LENGTH;
-  const isWarning = contentCharCount > SOLUTION_VALIDATION.CONTENT_MAX_LENGTH * 0.8;
+  const isWarning =
+    contentCharCount > SOLUTION_VALIDATION.CONTENT_MAX_LENGTH * 0.8;
 
   // Get current images from content
   const currentImages = extractImagesFromContent(formData.content || "");
@@ -294,7 +319,9 @@ const handleDriveLinkChange = (link: string) => {
     return (
       <div className="min-h-screen flex justify-center items-center bg-gray-50">
         <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center max-w-md">
-          <h3 className="text-lg font-medium text-red-800">Solution Not Found</h3>
+          <h3 className="text-lg font-medium text-red-800">
+            Solution Not Found
+          </h3>
           <p className="mt-2 text-sm text-red-600">
             The solution youre looking for doesnt exist or has been deleted.
           </p>
@@ -319,19 +346,10 @@ const handleDriveLinkChange = (link: string) => {
 
       {/* Middle Content Area */}
       <div className="flex-1 flex flex-col max-w-5xl mx-auto px-6 py-8 overflow-y-auto">
-        <button
-          onClick={() => router.push(ADMIN_ROUTES.SOLUTIONS)}
-          className="flex items-center text-gray-700 hover:text-gray-900 font-medium transition-colors mb-6"
-        >
-          <ArrowLeftIcon className="w-5 h-5 mr-2" />
-          Back to Solutions
-        </button>
-
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">Edit Solution</h1>
-          <p className="mt-1 text-sm text-gray-500">
+          <h2 className="text-sm text-gray-500">
             Update the solution details, content, and resources
-          </p>
+          </h2>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -354,9 +372,7 @@ const handleDriveLinkChange = (link: string) => {
               onEditorReady={setEditor}
               solutionId={solutionId}
               visualizerFileIds={formData.visualizerFileIds || []}
-              onVisualizerFileIdsChange={(fileIds) =>
-                updateFormData("visualizerFileIds", fileIds)
-              }
+              onVisualizerFileIdsChange={handleVisualizerFileIdsChange}
             />
           </div>
 

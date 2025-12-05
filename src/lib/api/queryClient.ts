@@ -6,14 +6,14 @@ import { AxiosError } from 'axios';
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      // SIMPLIFIED STRATEGY: Always fetch fresh data like /me page
-      staleTime: 0, // Always consider data stale
-      gcTime: 1 * 60 * 1000, // Keep in cache for only 1 minute
+      
+      staleTime: 20 * 60 * 1000,  
+      gcTime: 30 * 60 * 1000,  
       
       // ALWAYS FRESH DATA STRATEGY
       refetchOnMount: true, // Always refetch when component mounts
-      refetchOnWindowFocus: true, // Always refetch when user returns to tab
-      refetchOnReconnect: true, // Always refetch on network reconnect
+      refetchOnWindowFocus: false, // Always refetch when user returns to tab
+      refetchOnReconnect: false, // Always refetch on network reconnect
       
       // NO AUTO-REFRESH - only on user action
       refetchInterval: false, // Disable auto-refresh to avoid complexity

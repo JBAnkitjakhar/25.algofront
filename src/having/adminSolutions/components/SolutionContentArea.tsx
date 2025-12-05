@@ -2,7 +2,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Editor } from "@tiptap/react";
 import { FileText } from "lucide-react";
 import { SolutionEditor } from "./SolutionEditor";
@@ -27,14 +27,25 @@ export function SolutionContentArea({
   onVisualizerFileIdsChange,
 }: SolutionContentAreaProps) {
   const [activeView, setActiveView] = useState<"editor" | "visualizers">("editor");
-  
-  // ✅ Use visualizerFileIds length directly from props
   const visualizerCount = visualizerFileIds.length;
+
+  // ✅ Force re-render when visualizerFileIds changes
+  useEffect(() => {
+    console.log("🔄 visualizerFileIds changed:", visualizerFileIds);
+  }, [visualizerFileIds]);
+
+  console.log("🔄 SolutionContentArea render:", {
+    visualizerCount,
+    fileIds: visualizerFileIds,
+    activeView,
+  });
 
   return (
     <div className="flex-1 flex flex-col">
+      {/* ✅ BOTH BUTTONS - Editor and Visualizers */}
       <div className="bg-gray-50 border-b border-gray-200 px-4 py-2">
         <div className="flex space-x-2">
+          {/* ✅ EDITOR BUTTON */}
           <button
             type="button"
             onClick={() => setActiveView("editor")}
@@ -47,6 +58,8 @@ export function SolutionContentArea({
             <FileText className="w-4 h-4" />
             Solution Editor
           </button>
+
+          {/* ✅ VISUALIZERS BUTTON */}
           <button
             type="button"
             onClick={() => setActiveView("visualizers")}
@@ -72,6 +85,7 @@ export function SolutionContentArea({
           />
         ) : (
           <VisualizerManager
+            // key={visualizerFileIds.join(",")} // ✅ Force remount when fileIds change
             solutionId={solutionId}
             visualizerFileIds={visualizerFileIds}
             onVisualizerFileIdsChange={onVisualizerFileIdsChange}

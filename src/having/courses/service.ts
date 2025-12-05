@@ -17,7 +17,6 @@ import type {
   MoveDocumentRequest,
 } from "./types";
 import { COURSES_ENDPOINTS } from "./constants";
-import { API_BASE_URL } from "@/constants";
 
 class CoursesService {
   //create topic
@@ -177,10 +176,10 @@ class CoursesService {
     data: UpdateDocumentRequest
   ): Promise<ApiResponse<Document>> {
     // Add debugging
-    console.log("🔍 updateDocument called with:", { docId, data });
+    // console.log("🔍 updateDocument called with:", { docId, data });
     const url = COURSES_ENDPOINTS.UPDATE_DOC(docId);
-    console.log("🔍 UPDATE_DOC URL:", url);
-    console.log("🔍 Full URL would be:", `${API_BASE_URL}${url}`);
+    // console.log("🔍 UPDATE_DOC URL:", url);
+    // console.log("🔍 Full URL would be:", `${API_BASE_URL}${url}`);
 
     try {
       const response = await apiClient.put<{
@@ -189,7 +188,7 @@ class CoursesService {
         message: string;
       }>(url, data);
 
-      console.log("🔍 Response received:", response);
+      // console.log("🔍 Response received:", response);
 
       if (response.success && response.data && response.data.success) {
         return { success: true, data: response.data.data };

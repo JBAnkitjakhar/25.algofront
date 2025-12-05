@@ -1,5 +1,4 @@
 // src/having/adminSolutions/components/SolutionCard.tsx
-// Card component for solutions list page
 
 "use client";
 

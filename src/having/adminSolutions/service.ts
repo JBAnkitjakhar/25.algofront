@@ -174,11 +174,11 @@ class AdminSolutionsService {
       const formData = new FormData();
       formData.append("visualizer", file);
 
-      console.log("📤 [Service] Uploading visualizer:", {
-        solutionId,
-        fileName: file.name,
-        fileSize: file.size,
-      });
+      // console.log("📤 [Service] Uploading visualizer:", {
+      //   solutionId,
+      //   fileName: file.name,
+      //   fileSize: file.size,
+      // });
 
       const response = await apiClient.post<{
         originalFileName: string;
@@ -192,7 +192,7 @@ class AdminSolutionsService {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
-      console.log("✅ [Service] Upload response:", response);
+      // console.log("✅ [Service] Upload response:", response);
 
       if (response.success && response.data) {
         return {
@@ -242,7 +242,7 @@ async getVisualizerMetadata(
     fileId: string
   ): Promise<ApiResponse<{ success: string }>> {
     try {
-      console.log(`🗑️ [Service] Deleting visualizer: ${fileId}`);
+      // console.log(`🗑️ [Service] Deleting visualizer: ${fileId}`);
       return await apiClient.delete(
         ADMIN_SOLUTIONS_ENDPOINTS.DELETE_VISUALIZER(fileId)
       );

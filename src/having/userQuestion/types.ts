@@ -1,4 +1,4 @@
-// src/having/userQuestion/types.ts - CORRECTED
+// src/having/userQuestion/types.ts
 
 export interface QuestionDetail {
   id: string;
@@ -9,7 +9,6 @@ export interface QuestionDetail {
   imageFolderUrl: string | null;
   codeSnippets: CodeSnippet[];
   categoryId: string;
-  // NO categoryName - fetch separately if needed
   level: 'EASY' | 'MEDIUM' | 'HARD';
   displayOrder: number;
   createdByName: string;
@@ -32,7 +31,6 @@ export interface UserQuestionProgress {
 export interface SolutionSummary {
   id: string;
   questionId: string;
-  // NO questionTitle - we already know the question context
   content: string;
   driveLink: string | null;
   youtubeLink: string | null;
@@ -50,7 +48,6 @@ export interface SolutionSummary {
 export interface ApproachMetadata {
   id: string;
   questionId: string;
-  // NO questionTitle - we already know the question context
   userId: string;
   userName: string;
   codeLanguage: string;

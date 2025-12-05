@@ -1,19 +1,26 @@
-// src/having/userQuestion/components/UserApproaches.tsx  
+// src/having/userQuestion/components/UserApproaches.tsx
 
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Edit, Trash2, ChevronDown, ChevronUp, Code } from 'lucide-react';
-import { useApproachesByQuestion, useDeleteApproach, useApproachDetail } from '@/having/userQuestion/hooks';
-import { dateUtils } from '@/lib/utils/common';
-import type { ApproachDetail } from '@/having/userQuestion/types'; // CHANGED
+import { useState } from "react";
+import { Edit, Trash2, ChevronDown, ChevronUp, Code } from "lucide-react";
+import {
+  useApproachesByQuestion,
+  useDeleteApproach,
+  useApproachDetail,
+} from "@/having/userQuestion/hooks";
+import { dateUtils } from "@/lib/utils/common";
+import type { ApproachDetail } from "@/having/userQuestion/types"; // CHANGED
 
 interface UserApproachesProps {
   questionId: string;
   onEditApproach?: (approach: ApproachDetail) => void; // CHANGED from ApproachDTO
 }
 
-export function UserApproaches({ questionId, onEditApproach }: UserApproachesProps) {
+export function UserApproaches({
+  questionId,
+  onEditApproach,
+}: UserApproachesProps) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
@@ -23,11 +30,11 @@ export function UserApproaches({ questionId, onEditApproach }: UserApproachesPro
   // Fetch full approach when needed for editing
   const { data: approachDetail } = useApproachDetail(
     questionId,
-    expandedId || '',
+    expandedId || ""
   );
 
   const handleDelete = (approachId: string) => {
-    if (!confirm('Are you sure you want to delete this approach?')) return;
+    if (!confirm("Are you sure you want to delete this approach?")) return;
 
     setDeletingId(approachId);
     deleteMutation.mutate(
@@ -70,7 +77,11 @@ export function UserApproaches({ questionId, onEditApproach }: UserApproachesPro
           My Approaches ({approaches.length})
         </h3>
         <div className="text-sm text-gray-600 dark:text-gray-400">
-          Total size: {(approaches.reduce((sum, a) => sum + a.contentSize, 0) / 1024).toFixed(1)} KB
+          Total size:{" "}
+          {(
+            approaches.reduce((sum, a) => sum + a.contentSize, 0) / 1024
+          ).toFixed(1)}{" "}
+          KB
         </div>
       </div>
 
@@ -92,7 +103,11 @@ export function UserApproaches({ questionId, onEditApproach }: UserApproachesPro
 
               <div className="flex items-center space-x-2">
                 <button
-                  onClick={() => setExpandedId(expandedId === approach.id ? null : approach.id)}
+                  onClick={() =>
+                    setExpandedId(
+                      expandedId === approach.id ? null : approach.id
+                    )
+                  }
                   className="p-1.5 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
                 >
                   {expandedId === approach.id ? (
@@ -104,7 +119,9 @@ export function UserApproaches({ questionId, onEditApproach }: UserApproachesPro
 
                 <button
                   onClick={() => handleEdit(approach.id)}
-                  disabled={!approachDetail || approachDetail.id !== approach.id}
+                  disabled={
+                    !approachDetail || approachDetail.id !== approach.id
+                  }
                   className="p-1.5 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 disabled:opacity-50"
                   title="Edit approach"
                 >
@@ -138,7 +155,7 @@ export function UserApproaches({ questionId, onEditApproach }: UserApproachesPro
                   Description:
                 </h4>
                 <p className="text-sm text-gray-600 dark:text-gray-400 whitespace-pre-wrap">
-                  {approachDetail.textContent || 'No description provided'}
+                  {approachDetail.textContent || "No description provided"}
                 </p>
               </div>
 
@@ -147,8 +164,10 @@ export function UserApproaches({ questionId, onEditApproach }: UserApproachesPro
                   Code Preview:
                 </h4>
                 <pre className="bg-gray-900 text-gray-100 p-3 rounded-lg overflow-x-auto text-xs">
-                  {approachDetail.codeContent.substring(0, 500)}
-                  {approachDetail.codeContent.length > 500 && '...'}
+                  {approachDetail.codeContent
+                    ? approachDetail.codeContent.substring(0, 500) +
+                      (approachDetail.codeContent.length > 500 ? "..." : "")
+                    : "No code content"}
                 </pre>
               </div>
             </div>

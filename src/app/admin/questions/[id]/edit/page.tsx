@@ -295,7 +295,7 @@ export default function EditQuestionPage() {
     setErrors([]);
 
     // ✅ Log for debugging
-    console.log("Submitting with imageUrls:", updatedFormData.imageUrls);
+    // console.log("Submitting with imageUrls:", updatedFormData.imageUrls);
 
     updateQuestionMutation.mutate(
       { id: questionId, request: updatedFormData },
