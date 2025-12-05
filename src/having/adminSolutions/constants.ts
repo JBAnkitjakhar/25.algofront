@@ -22,8 +22,8 @@ export const ADMIN_SOLUTIONS_ENDPOINTS = {
     `${API_BASE_URL}/files/visualizers/${fileId}`,
   DELETE_VISUALIZER: (fileId: string) => 
     `${API_BASE_URL}/files/visualizers/${fileId}`,
-  VISUALIZERS_BY_SOLUTION: (solutionId: string) => 
-    `${API_BASE_URL}/files/solutions/${solutionId}/visualizers`,
+   GET_VISUALIZER_METADATA: (fileId: string) => 
+    `${API_BASE_URL}/files/visualizers/${fileId}/metadata`,
   
   // Link validation
   VALIDATE_YOUTUBE: `${API_BASE_URL}/solutions/validate-youtube`,

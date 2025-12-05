@@ -11,7 +11,6 @@ import type {
   CreateSolutionRequest,
   UpdateSolutionRequest,
   SolutionWithQuestion,
-  VisualizerFilesResponse,
 } from "./types";
 
 // Fetch solutions summary with pagination
@@ -193,10 +192,8 @@ export function useUploadSolutionImage() {
   });
 }
 
-// Upload visualizer file - FIXED
+// Upload visualizer file
 export function useUploadVisualizerFile() {
-  const queryClient = useQueryClient();
-
   return useMutation({
     mutationFn: async ({ solutionId, file }: { solutionId: string; file: File }) => {
       const response = await adminSolutionsService.uploadVisualizer(solutionId, file);
@@ -206,40 +203,18 @@ export function useUploadVisualizerFile() {
       throw new Error(response.message || "Failed to upload visualizer");
     },
     onSuccess: (data, variables) => {
-      // Invalidate visualizers query for this solution
-      queryClient.invalidateQueries({ 
-        queryKey: ADMIN_SOLUTIONS_QUERY_KEYS.VISUALIZERS(variables.solutionId) 
-      });
+      console.log("✅ Upload successful:", data);
       toast.success(`Visualizer "${variables.file.name}" uploaded successfully`);
     },
     onError: (error: Error) => {
-      console.error("Visualizer upload error:", error);
+      console.error("❌ Visualizer upload error:", error);
       toast.error(`Visualizer upload failed: ${error.message}`);
     },
   });
 }
 
-// Get visualizers by solution - FIXED
-export function useVisualizerFilesBySolution(solutionId: string) {
-  return useQuery({
-    queryKey: ADMIN_SOLUTIONS_QUERY_KEYS.VISUALIZERS(solutionId),
-    queryFn: async (): Promise<VisualizerFilesResponse> => {
-      const response = await adminSolutionsService.getVisualizersBySolution(solutionId);
-      if (response.success && response.data) {
-        return response.data;
-      }
-      throw new Error(response.message || "Failed to fetch visualizers");
-    },
-    enabled: !!solutionId,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    refetchOnMount: true,
-  });
-}
-
 // Delete visualizer file
 export function useDeleteVisualizerFile() {
-  const queryClient = useQueryClient();
-
   return useMutation({
     mutationFn: async (fileId: string) => {
       const response = await adminSolutionsService.deleteVisualizer(fileId);
@@ -249,16 +224,11 @@ export function useDeleteVisualizerFile() {
       throw new Error(response.message || "Failed to delete visualizer");
     },
     onSuccess: () => {
-      // Invalidate all visualizer queries
-      queryClient.invalidateQueries({ 
-        predicate: (query) => 
-          query.queryKey[0] === 'admin-solutions' && 
-          query.queryKey[1] === 'visualizers'
-      });
+      console.log("✅ Delete successful");
       toast.success("Visualizer deleted successfully");
     },
     onError: (error: Error) => {
-      console.error("Delete visualizer error:", error);
+      console.error("❌ Delete visualizer error:", error);
       toast.error(`Failed to delete visualizer: ${error.message}`);
     },
   });

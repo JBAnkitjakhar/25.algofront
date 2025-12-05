@@ -1,4 +1,4 @@
-// src/components/common/EmbeddedVisualizer.tsx  
+// src/components/common/EmbeddedVisualizer.tsx
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import {
@@ -50,80 +50,84 @@ export function EmbeddedVisualizer({
   const [htmlContent, setHtmlContent] = useState<string>("");
   const [retryCount, setRetryCount] = useState(0);
   const [isInteractive, setIsInteractive] = useState(false);
-  const [fetchAttempted, setFetchAttempted] = useState(false); // FIXED: Add fetch tracking
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const blobUrlRef = useRef<string | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
 
-  // Professional error categorization
-  const categorizeError = useCallback((
-    status: number,
-    message: string
-  ): VisualizerError => {
-    switch (status) {
-      case 401:
-      case 403:
-        return {
-          type: "auth",
-          message: "Authentication required",
-          details: "Your session may have expired. Please refresh the page and try again.",
-          recoverable: true,
-        };
-      case 404:
-        return {
-          type: "notfound",
-          message: "Visualizer not found",
-          details: "This file may have been deleted or moved.",
-          recoverable: false,
-        };
-      case 429:
-        return {
-          type: "network",
-          message: "Too many requests",
-          details: "Please wait a moment before trying again.",
-          recoverable: true,
-        };
-      case 500:
-      case 502:
-      case 503:
-        return {
-          type: "network",
-          message: "Server error",
-          details: "The server is currently unavailable. Please try again later.",
-          recoverable: true,
-        };
-      default:
-        if (status >= 400 && status < 500) {
+  const categorizeError = useCallback(
+    (status: number, message: string): VisualizerError => {
+      switch (status) {
+        case 401:
+        case 403:
           return {
-            type: "content",
-            message: "Invalid request",
-            details: message || "The request could not be processed.",
+            type: "auth",
+            message: "Authentication required",
+            details:
+              "Your session may have expired. Please refresh the page and try again.",
+            recoverable: true,
+          };
+        case 404:
+          return {
+            type: "notfound",
+            message: "Visualizer not found",
+            details: "This file may have been deleted or moved.",
             recoverable: false,
           };
-        }
-        return {
-          type: "unknown",
-          message: "Loading failed",
-          details: message || "An unexpected error occurred.",
-          recoverable: true,
-        };
-    }
-  }, []);
+        case 429:
+          return {
+            type: "network",
+            message: "Too many requests",
+            details: "Please wait a moment before trying again.",
+            recoverable: true,
+          };
+        case 500:
+        case 502:
+        case 503:
+          return {
+            type: "network",
+            message: "Server error",
+            details:
+              "The server is currently unavailable. Please try again later.",
+            recoverable: true,
+          };
+        default:
+          if (status >= 400 && status < 500) {
+            return {
+              type: "content",
+              message: "Invalid request",
+              details: message || "The request could not be processed.",
+              recoverable: false,
+            };
+          }
+          return {
+            type: "unknown",
+            message: "Loading failed",
+            details: message || "An unexpected error occurred.",
+            recoverable: true,
+          };
+      }
+    },
+    []
+  );
 
-  // FIXED: Memoize callbacks to prevent unnecessary re-renders
-  const handleError = useCallback((errorMessage: string) => {
-    onError?.(errorMessage);
-  }, [onError]);
+  const handleError = useCallback(
+    (errorMessage: string) => {
+      onError?.(errorMessage);
+    },
+    [onError]
+  );
 
-  const handleFileNotFound = useCallback((id: string) => {
-    onFileNotFound?.(id);
-  }, [onFileNotFound]);
+  const handleFileNotFound = useCallback(
+    (id: string) => {
+      onFileNotFound?.(id);
+    },
+    [onFileNotFound]
+  );
 
-  // FIXED: Enhanced fetch with proper dependency management
   useEffect(() => {
     const fetchVisualizerContent = async () => {
-      // FIXED: Don't fetch if already attempted or file is known to be deleted
-      if (fetchAttempted || (error && error.type === "notfound")) {
+      // Don't refetch if already loaded successfully
+      if (htmlContent || (error && !error.recoverable)) {
         return;
       }
 
@@ -132,7 +136,6 @@ export function EmbeddedVisualizer({
       }
 
       abortControllerRef.current = new AbortController();
-      setFetchAttempted(true);
 
       try {
         setIsLoading(true);
@@ -142,7 +145,6 @@ export function EmbeddedVisualizer({
           throw new Error("Invalid file identifier");
         }
 
-        // CRITICAL: Get JWT token for authentication
         const token = cookieManager.getToken();
         if (!token) {
           setError({
@@ -158,9 +160,6 @@ export function EmbeddedVisualizer({
           process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080/api";
         const url = `${apiBaseUrl}/files/visualizers/${fileId}`;
 
-        // console.log(`[Visualizer] Fetching: ${url} with JWT token`);
-
-        // FIXED: Proper fetch with JWT authentication
         const response = await fetch(url, {
           method: "GET",
           headers: {
@@ -172,10 +171,6 @@ export function EmbeddedVisualizer({
           signal: abortControllerRef.current.signal,
         });
 
-        // console.log(
-        //   `[Visualizer] Response: ${response.status} ${response.statusText}`
-        // );
-
         if (!response.ok) {
           const errorInfo = categorizeError(
             response.status,
@@ -183,7 +178,6 @@ export function EmbeddedVisualizer({
           );
           setError(errorInfo);
 
-          // FIXED: Call onFileNotFound for 404 errors to clean up the UI
           if (response.status === 404) {
             handleFileNotFound(fileId);
           }
@@ -215,25 +209,19 @@ export function EmbeddedVisualizer({
           return;
         }
 
-        // Detect if content is interactive
         const hasJavaScript =
           htmlText.toLowerCase().includes("<script") ||
           htmlText.toLowerCase().includes("javascript:");
         setIsInteractive(hasJavaScript);
 
-        // Clean up previous blob URL
         if (blobUrlRef.current) {
           URL.revokeObjectURL(blobUrlRef.current);
         }
 
         setHtmlContent(htmlText);
         setRetryCount(0);
-        // console.log(
-        //   `[Visualizer] Content loaded successfully (${htmlText.length} chars), Interactive: ${hasJavaScript}`
-        // );
       } catch (err) {
         if (err instanceof Error && err.name === "AbortError") {
-          // console.log("[Visualizer] Request aborted");
           return;
         }
 
@@ -242,7 +230,10 @@ export function EmbeddedVisualizer({
         const errorInfo: VisualizerError = {
           type: "network",
           message: "Network error",
-          details: err instanceof Error ? err.message : "Failed to connect to server",
+          details:
+            err instanceof Error
+              ? err.message
+              : "Failed to connect to server",
           recoverable: true,
         };
 
@@ -253,10 +244,7 @@ export function EmbeddedVisualizer({
       }
     };
 
-    // FIXED: Only fetch if fileId exists and we haven't already attempted or hit a permanent error
-    if (fileId) {
-      fetchVisualizerContent();
-    }
+    fetchVisualizerContent();
 
     return () => {
       if (abortControllerRef.current) {
@@ -266,25 +254,16 @@ export function EmbeddedVisualizer({
         URL.revokeObjectURL(blobUrlRef.current);
       }
     };
-  }, [fileId, fetchAttempted, error, categorizeError, handleError, handleFileNotFound]); // FIXED: Complete dependency array
-
-  // FIXED: Reset fetch attempt when fileId changes
-  useEffect(() => {
-    setFetchAttempted(false);
-    setError(null);
-    setHtmlContent("");
-    setIsInteractive(false);
-  }, [fileId]);
+  }, [fileId, htmlContent, error, categorizeError, handleError, handleFileNotFound]);
 
   const handleRetry = useCallback(() => {
     if (retryCount < 3) {
       setRetryCount((prev) => prev + 1);
-      setFetchAttempted(false); // Reset to allow retry
       setError(null);
+      setHtmlContent(""); // Reset to trigger refetch
     }
   }, [retryCount]);
 
-  // ENHANCED: Create secure blob URL for interactive HTML content
   const createSecureBlobUrl = useCallback((content: string) => {
     if (blobUrlRef.current) {
       URL.revokeObjectURL(blobUrlRef.current);
@@ -297,85 +276,81 @@ export function EmbeddedVisualizer({
     return url;
   }, []);
 
-  // Enhanced error rendering
-  const renderError = useCallback((error: VisualizerError) => {
-    const getErrorIcon = () => {
-      switch (error.type) {
-        case "notfound":
-          return DocumentIcon;
-        case "auth":
-          return ExclamationCircleIcon;
-        default:
-          return ExclamationTriangleIcon;
-      }
-    };
+  const renderError = useCallback(
+    (error: VisualizerError) => {
+      const getErrorIcon = () => {
+        switch (error.type) {
+          case "notfound":
+            return DocumentIcon;
+          case "auth":
+            return ExclamationCircleIcon;
+          default:
+            return ExclamationTriangleIcon;
+        }
+      };
 
-    const getErrorColor = () => {
-      switch (error.type) {
-        case "notfound":
-          return "text-gray-600 border-gray-200 bg-gray-50";
-        case "auth":
-          return "text-blue-600 border-blue-200 bg-blue-50";
-        default:
-          return "text-red-600 border-red-200 bg-red-50";
-      }
-    };
+      const getErrorColor = () => {
+        switch (error.type) {
+          case "notfound":
+            return "text-gray-600 border-gray-200 bg-gray-50";
+          case "auth":
+            return "text-blue-600 border-blue-200 bg-blue-50";
+          default:
+            return "text-red-600 border-red-200 bg-red-50";
+        }
+      };
 
-    const ErrorIcon = getErrorIcon();
-    const colorClass = getErrorColor();
+      const ErrorIcon = getErrorIcon();
+      const colorClass = getErrorColor();
 
-    return (
-      <div className={`border rounded-lg p-4 ${colorClass} ${className}`}>
-        <div className="flex items-start">
-          <ErrorIcon className="h-5 w-5 flex-shrink-0 mr-3 mt-0.5" />
-          <div className="flex-1">
-            <div className="font-medium text-sm">{error.message}</div>
-            {error.details && (
-              <div className="text-sm opacity-80 mt-1">{error.details}</div>
-            )}
-            {error.recoverable && (
-              <div className="mt-3 flex gap-2">
-                <button
-                  onClick={handleRetry}
-                  disabled={retryCount >= 3}
-                  className="px-3 py-1 text-xs font-medium border rounded hover:bg-white/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {retryCount >= 3 ? "Max retries reached" : "Retry"}
-                </button>
-                {retryCount > 0 && (
-                  <span className="text-xs opacity-70 self-center">
-                    Attempt {retryCount}/3
-                  </span>
-                )}
-              </div>
-            )}
+      return (
+        <div className={`border rounded-lg p-4 ${colorClass} ${className}`}>
+          <div className="flex items-start">
+            <ErrorIcon className="h-5 w-5 flex-shrink-0 mr-3 mt-0.5" />
+            <div className="flex-1">
+              <div className="font-medium text-sm">{error.message}</div>
+              {error.details && (
+                <div className="text-sm opacity-80 mt-1">{error.details}</div>
+              )}
+              {error.recoverable && (
+                <div className="mt-3 flex gap-2">
+                  <button
+                    onClick={handleRetry}
+                    disabled={retryCount >= 3}
+                    className="px-3 py-1 text-xs font-medium border rounded hover:bg-white/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {retryCount >= 3 ? "Max retries reached" : "Retry"}
+                  </button>
+                  {retryCount > 0 && (
+                    <span className="text-xs opacity-70 self-center">
+                      Attempt {retryCount}/3
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         </div>
-      </div>
-    );
-  }, [retryCount, handleRetry, className]);
+      );
+    },
+    [retryCount, handleRetry, className]
+  );
 
-  // Handle iframe events with enhanced security
   const handleIframeLoad = useCallback(() => {
     const iframe = iframeRef.current;
     if (iframe && iframe.contentWindow) {
       try {
-        // SECURITY: Add message listener for iframe communication
         const handleMessage = (event: MessageEvent) => {
-          // Only accept messages from the iframe's origin
           if (event.source === iframe.contentWindow) {
-            // console.log("[Visualizer] Message from iframe:", event.data);
+            // Handle iframe messages if needed
           }
         };
 
         window.addEventListener("message", handleMessage);
 
-        // Cleanup listener when component unmounts
         return () => window.removeEventListener("message", handleMessage);
       } catch (e) {
-        console.error(e);
-        // Cross-origin access might be blocked, which is fine for security
-        // console.log("[Visualizer] Cross-origin iframe communication blocked (expected)");
+        // Cross-origin access blocked (expected)
       }
     }
   }, []);
@@ -422,7 +397,6 @@ export function EmbeddedVisualizer({
       <div
         className={`border border-gray-200 rounded-lg overflow-hidden bg-white ${className}`}
       >
-        {/* ENHANCED Header with interactivity indicator */}
         <div className="bg-gray-50 px-4 py-2 flex items-center justify-between border-b border-gray-200">
           <h4 className="text-sm font-medium text-gray-900 flex items-center">
             <span
@@ -431,11 +405,6 @@ export function EmbeddedVisualizer({
               }`}
             ></span>
             {title}
-            {/* {isInteractive && (
-              // <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
-              //   Interactive
-              // </span>
-            )} */}
           </h4>
           <div className="flex items-center space-x-2">
             <button
@@ -448,7 +417,6 @@ export function EmbeddedVisualizer({
           </div>
         </div>
 
-        {/* ENHANCED Content Container with better iframe sandbox */}
         <div className="relative bg-white" style={{ height }}>
           {htmlContent && (
             <iframe
@@ -458,10 +426,8 @@ export function EmbeddedVisualizer({
               className="w-full h-full border-0"
               onLoad={handleIframeLoad}
               onError={handleIframeError}
-              // CRITICAL: Enhanced sandbox permissions for interactive HTML
               sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals"
               style={{ minHeight: height }}
-              // SECURITY: Additional attributes for better isolation
               loading="lazy"
               referrerPolicy="strict-origin-when-cross-origin"
             />
@@ -469,7 +435,6 @@ export function EmbeddedVisualizer({
         </div>
       </div>
 
-      {/* Fullscreen Modal with Enhanced Features */}
       <Transition appear show={isFullscreen} as={Fragment}>
         <Dialog
           as="div"
@@ -541,7 +506,6 @@ export function EmbeddedVisualizer({
                         src={createSecureBlobUrl(htmlContent)}
                         title={`${title} - Fullscreen`}
                         className="w-full h-full border-0"
-                        // ENHANCED: Same security sandbox for fullscreen
                         sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals"
                         loading="lazy"
                         referrerPolicy="strict-origin-when-cross-origin"

@@ -2,13 +2,12 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Editor } from "@tiptap/react";
 import { FileText } from "lucide-react";
 import { SolutionEditor } from "./SolutionEditor";
 import { CubeTransparentIcon } from "@heroicons/react/24/outline";
 import { VisualizerManager } from "./VisualizerManager";
-import { useVisualizerFilesBySolution } from "../hooks";
 
 interface SolutionContentAreaProps {
   content: string;
@@ -29,19 +28,8 @@ export function SolutionContentArea({
 }: SolutionContentAreaProps) {
   const [activeView, setActiveView] = useState<"editor" | "visualizers">("editor");
   
-  // Fetch actual visualizers to get correct count
-  const { data: visualizerFiles } = useVisualizerFilesBySolution(solutionId || "");
-  const actualVisualizerCount = visualizerFiles?.data?.length || 0;
-
-  // Sync visualizerFileIds with actual uploaded files
-  useEffect(() => {
-    if (visualizerFiles?.data && solutionId) {
-      const fileIds = visualizerFiles.data.map(file => file.fileId);
-      if (JSON.stringify(fileIds) !== JSON.stringify(visualizerFileIds)) {
-        onVisualizerFileIdsChange(fileIds);
-      }
-    }
-  }, [visualizerFiles, solutionId, visualizerFileIds, onVisualizerFileIdsChange]);
+  // ✅ Use visualizerFileIds length directly from props
+  const visualizerCount = visualizerFileIds.length;
 
   return (
     <div className="flex-1 flex flex-col">
@@ -69,7 +57,7 @@ export function SolutionContentArea({
             }`}
           >
             <CubeTransparentIcon className="w-4 h-4" />
-            Visualizers ({actualVisualizerCount}/2)
+            Visualizers ({visualizerCount}/2)
           </button>
         </div>
       </div>

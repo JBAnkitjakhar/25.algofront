@@ -1,5 +1,4 @@
-// src/having/adminSolutions/types.ts
-// Fix the types to use undefined consistently
+// src/having/adminSolutions/types.ts - Remove VisualizerFilesResponse
 
 export interface SolutionSummary {
   id: string;
@@ -54,9 +53,9 @@ export interface SolutionDetail {
   content: string;
   imageUrls?: string[];
   visualizerFileIds?: string[];
-  codeSnippet?: CodeSnippet; // ✅ Optional, not null
-  youtubeLink?: string; // ✅ Optional, not null
-  driveLink?: string; // ✅ Optional, not null
+  codeSnippet?: CodeSnippet;
+  youtubeLink?: string;
+  driveLink?: string;
   createdAt: string;
   updatedAt: string;
   createdByName: string;
@@ -64,7 +63,7 @@ export interface SolutionDetail {
 }
 
 export interface CreateSolutionRequest {
-  questionId: string; // Required by backend but taken from URL
+  questionId: string;
   content: string;
   driveLink?: string;
   youtubeLink?: string;
@@ -73,15 +72,14 @@ export interface CreateSolutionRequest {
   codeSnippet?: CodeSnippet;
 }
 
-// ✅ FIXED: Changed all null types to undefined
 export interface UpdateSolutionRequest {
-  questionId: string; // Required by backend
+  questionId: string;
   content?: string;
-  driveLink?: string; // ✅ Changed from string | null
-  youtubeLink?: string; // ✅ Changed from string | null
+  driveLink?: string;
+  youtubeLink?: string;
   imageUrls?: string[];
   visualizerFileIds?: string[];
-  codeSnippet?: CodeSnippet; // ✅ Changed from CodeSnippet | null
+  codeSnippet?: CodeSnippet;
 }
 
 export interface SolutionWithQuestion extends SolutionSummary {
@@ -90,16 +88,16 @@ export interface SolutionWithQuestion extends SolutionSummary {
   categoryId: string;
 }
 
-export interface VisualizerFile {
+// ✅ Individual visualizer file metadata (from GET /visualizers/{fileId}/metadata)
+export interface VisualizerFileMetadata {
   fileId: string;
   filename: string;
   originalFileName: string;
   size: number;
   uploadDate: string;
-}
-
-export interface VisualizerFilesResponse {
-  data: VisualizerFile[];
+  contentType?: string;
+  isInteractive?: boolean;
+  solutionId?: string;
 }
 
 export interface SolutionStats {
@@ -107,4 +105,9 @@ export interface SolutionStats {
   solutionsWithImages: number;
   solutionsWithYoutubeVideos: number;
   solutionsWithVisualizers: number;
+}
+
+export interface VisualizerMetadataResponse {
+  data: VisualizerFileMetadata;
+  success: boolean;
 }
