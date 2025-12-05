@@ -10,11 +10,11 @@ import type {
   UpdateSolutionRequest,
   SolutionWithQuestion,
   VisualizerFilesResponse,
+  VisualizerFile,
 } from "./types";
 import { ADMIN_SOLUTIONS_ENDPOINTS } from "./constants";
 
 class AdminSolutionsService {
-  // Fetch solutions summary with pagination
   async getSolutionsSummary(params?: {
     page?: number;
     size?: number;
@@ -39,7 +39,6 @@ class AdminSolutionsService {
     }
   }
 
-  // Fetch questions metadata
   async getQuestionsMetadata(): Promise<ApiResponse<QuestionsMetadataResponse>> {
     try {
       return await apiClient.get<QuestionsMetadataResponse>(
@@ -55,7 +54,6 @@ class AdminSolutionsService {
     }
   }
 
-  // Fetch solution detail by ID
   async getSolutionById(id: string): Promise<ApiResponse<SolutionDetail>> {
     try {
       return await apiClient.get<SolutionDetail>(
@@ -71,7 +69,6 @@ class AdminSolutionsService {
     }
   }
 
-  // Create solution for question
   async createSolution(
     questionId: string,
     request: CreateSolutionRequest
@@ -91,7 +88,6 @@ class AdminSolutionsService {
     }
   }
 
-  // Update solution
   async updateSolution(
     id: string,
     request: UpdateSolutionRequest
@@ -111,7 +107,6 @@ class AdminSolutionsService {
     }
   }
 
-  // Delete solution
   async deleteSolution(id: string): Promise<ApiResponse<{ success: string }>> {
     try {
       return await apiClient.delete<{ success: string }>(
@@ -127,7 +122,6 @@ class AdminSolutionsService {
     }
   }
 
-  // Upload solution image
   async uploadImage(file: File): Promise<ApiResponse<{
     secure_url: string;
     public_id: string;
@@ -162,58 +156,42 @@ class AdminSolutionsService {
     }
   }
 
-  // Validate YouTube link
-  async validateYoutubeLink(link: string): Promise<ApiResponse<{
-    valid: boolean;
-    error?: string;
-  }>> {
-    try {
-      return await apiClient.post(ADMIN_SOLUTIONS_ENDPOINTS.VALIDATE_YOUTUBE, { link });
-    } catch (error) {
-      console.error("Error validating YouTube link:", error);
-      return {
-        success: false,
-        error: "Validation failed",
-        message: "Failed to validate YouTube link",
-      };
-    }
-  }
-
-  // Validate Drive link
-  async validateDriveLink(link: string): Promise<ApiResponse<{
-    valid: boolean;
-    error?: string;
-  }>> {
-    try {
-      return await apiClient.post(ADMIN_SOLUTIONS_ENDPOINTS.VALIDATE_DRIVE, { link });
-    } catch (error) {
-      console.error("Error validating Drive link:", error);
-      return {
-        success: false,
-        error: "Validation failed",
-        message: "Failed to validate Drive link",
-      };
-    }
-  }
-
-  // Upload visualizer file
   async uploadVisualizer(solutionId: string, file: File): Promise<ApiResponse<{
     fileId: string;
     filename: string;
   }>> {
     try {
       const formData = new FormData();
-      formData.append("file", file);
+      formData.append("visualizer", file);
+
+      // console.log("Uploading visualizer:", { solutionId, fileName: file.name, fileSize: file.size });
 
       const response = await apiClient.post<{
-        success: boolean;
-        data: { fileId: string; filename: string };
-      }>(ADMIN_SOLUTIONS_ENDPOINTS.UPLOAD_VISUALIZER(solutionId), formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+        originalFileName: string;
+        filename: string;
+        fileId: string;
+        size: number;
+        uploadDate: string;
+        solutionId: string;
+        isInteractive: boolean;
+      }>(
+        ADMIN_SOLUTIONS_ENDPOINTS.UPLOAD_VISUALIZER(solutionId), 
+        formData, 
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        }
+      );
 
-      if (response.success && response.data?.success) {
-        return { success: true, data: response.data.data };
+      // console.log("Upload response:", response);
+
+      if (response.success && response.data) {
+        return { 
+          success: true, 
+          data: {
+            fileId: response.data.fileId,
+            filename: response.data.filename
+          }
+        };
       }
 
       return {
@@ -221,24 +199,39 @@ class AdminSolutionsService {
         error: "Upload failed",
         message: "Failed to upload visualizer",
       };
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Error uploading visualizer:", error);
+      const errorMessage = error instanceof Error ? error.message : "Failed to upload visualizer";
       return {
         success: false,
         error: "Unexpected error",
-        message: "Failed to upload visualizer",
+        message: errorMessage,
       };
     }
   }
 
-  // Get visualizers for solution
   async getVisualizersBySolution(
     solutionId: string
   ): Promise<ApiResponse<VisualizerFilesResponse>> {
     try {
-      return await apiClient.get<VisualizerFilesResponse>(
+      const response = await apiClient.get<VisualizerFile[]>(
         ADMIN_SOLUTIONS_ENDPOINTS.VISUALIZERS_BY_SOLUTION(solutionId)
       );
+
+      // console.log("Get visualizers response:", response);
+
+      if (response.success && Array.isArray(response.data)) {
+        return { 
+          success: true, 
+          data: { data: response.data }
+        };
+      }
+
+      return {
+        success: false,
+        error: "Fetch failed",
+        message: "Failed to load visualizers",
+      };
     } catch (error) {
       console.error("Error fetching visualizers:", error);
       return {
@@ -249,7 +242,6 @@ class AdminSolutionsService {
     }
   }
 
-  // Delete visualizer file
   async deleteVisualizer(fileId: string): Promise<ApiResponse<{ success: string }>> {
     try {
       return await apiClient.delete(ADMIN_SOLUTIONS_ENDPOINTS.DELETE_VISUALIZER(fileId));
@@ -263,12 +255,10 @@ class AdminSolutionsService {
     }
   }
 
-  // Get visualizer file URL
   getVisualizerFileUrl(fileId: string): string {
     return ADMIN_SOLUTIONS_ENDPOINTS.GET_VISUALIZER(fileId);
   }
 
-  // Merge solutions with question data (O(n) with O(1) lookup)
   mergeSolutionsWithQuestions(
     solutions: SolutionsSummaryResponse,
     questions: QuestionsMetadataResponse

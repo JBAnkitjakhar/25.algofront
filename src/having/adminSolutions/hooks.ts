@@ -25,7 +25,7 @@ export function useSolutionsSummary(params?: { page?: number; size?: number }) {
       }
       throw new Error(response.message || "Failed to fetch solutions");
     },
-    staleTime: 20 * 60 * 1000, // 20 minutes
+    staleTime: 20 * 60 * 1000,
     gcTime: 30 * 60 * 1000,
     refetchOnMount: true,
     refetchOnWindowFocus: false,
@@ -193,24 +193,33 @@ export function useUploadSolutionImage() {
   });
 }
 
-// Upload visualizer file
+// Upload visualizer file - FIXED
 export function useUploadVisualizerFile() {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: async ({ solutionId, file }: { solutionId: string; file: File }) => {
       const response = await adminSolutionsService.uploadVisualizer(solutionId, file);
       if (response.success && response.data) {
-        toast.success(`Visualizer "${file.name}" uploaded successfully`);
         return response.data;
       }
       throw new Error(response.message || "Failed to upload visualizer");
     },
+    onSuccess: (data, variables) => {
+      // Invalidate visualizers query for this solution
+      queryClient.invalidateQueries({ 
+        queryKey: ADMIN_SOLUTIONS_QUERY_KEYS.VISUALIZERS(variables.solutionId) 
+      });
+      toast.success(`Visualizer "${variables.file.name}" uploaded successfully`);
+    },
     onError: (error: Error) => {
+      console.error("Visualizer upload error:", error);
       toast.error(`Visualizer upload failed: ${error.message}`);
     },
   });
 }
 
-// Get visualizers by solution
+// Get visualizers by solution - FIXED
 export function useVisualizerFilesBySolution(solutionId: string) {
   return useQuery({
     queryKey: ADMIN_SOLUTIONS_QUERY_KEYS.VISUALIZERS(solutionId),
@@ -222,7 +231,8 @@ export function useVisualizerFilesBySolution(solutionId: string) {
       throw new Error(response.message || "Failed to fetch visualizers");
     },
     enabled: !!solutionId,
-    staleTime: 10 * 60 * 1000, // 10 minutes
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnMount: true,
   });
 }
 
@@ -234,17 +244,21 @@ export function useDeleteVisualizerFile() {
     mutationFn: async (fileId: string) => {
       const response = await adminSolutionsService.deleteVisualizer(fileId);
       if (response.success && response.data) {
-        toast.success("Visualizer deleted successfully");
         return response.data;
       }
       throw new Error(response.message || "Failed to delete visualizer");
     },
     onSuccess: () => {
+      // Invalidate all visualizer queries
       queryClient.invalidateQueries({ 
-        predicate: (query) => query.queryKey[0] === 'admin-solutions' && query.queryKey[1] === 'visualizers'
+        predicate: (query) => 
+          query.queryKey[0] === 'admin-solutions' && 
+          query.queryKey[1] === 'visualizers'
       });
+      toast.success("Visualizer deleted successfully");
     },
     onError: (error: Error) => {
+      console.error("Delete visualizer error:", error);
       toast.error(`Failed to delete visualizer: ${error.message}`);
     },
   });

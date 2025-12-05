@@ -1,14 +1,11 @@
 // src/having/adminSolutions/components/VisualizerManager.tsx
-// FIXED VERSION - All errors resolved
-
 "use client";
 
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback } from "react";
 import {
   CubeTransparentIcon,
   EyeIcon,
   TrashIcon,
-  ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
 import {
   useUploadVisualizerFile,
@@ -18,190 +15,7 @@ import {
 import { adminSolutionsService } from "../service";
 import { SOLUTION_VALIDATION } from "../constants";
 import toast from "react-hot-toast";
-import { cookieManager } from "@/lib/utils/auth";
-
-// Embedded visualizer component
-const EmbeddedVisualizer = ({
-  fileId,
-  title,
-  height = "400px",
-  onError,
-  onFileNotFound,
-}: {
-  fileId: string;
-  title: string;
-  height?: string;
-  onError?: (error: Error) => void;
-  onFileNotFound?: (fileId: string) => void;
-}) => {
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [htmlContent, setHtmlContent] = useState<string>("");
-
-  const handleError = useCallback(
-    (err: Error) => {
-      onError?.(err);
-    },
-    [onError]
-  );
-
-  const handleFileNotFound = useCallback(
-    (id: string) => {
-      onFileNotFound?.(id);
-    },
-    [onFileNotFound]
-  );
-
-  useEffect(() => {
-    let isMounted = true;
-
-    const fetchVisualizerContent = async () => {
-      if (error === "File has been deleted") {
-        return;
-      }
-
-      try {
-        setIsLoading(true);
-        setError(null);
-
-        const token = cookieManager.getToken();
-        if (!token) {
-          throw new Error(
-            "Authentication token not found. Please log in again."
-          );
-        }
-
-        const apiBaseUrl =
-          process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080/api";
-        const url = `${apiBaseUrl}/files/visualizers/${fileId}`;
-
-        const response = await fetch(url, {
-          method: "GET",
-          headers: {
-            Accept: "text/html",
-            Authorization: `Bearer ${token}`,
-            "Cache-Control": "no-cache",
-          },
-          credentials: "include",
-        });
-
-        if (!isMounted) return;
-
-        if (!response.ok) {
-          if (response.status === 404) {
-            handleFileNotFound(fileId);
-            setError("File has been deleted");
-            return;
-          }
-
-          if (response.status === 401) {
-            throw new Error(
-              "Authentication expired. Please refresh the page and try again."
-            );
-          }
-          throw new Error(`Failed to load visualizer: ${response.status}`);
-        }
-
-        const htmlText = await response.text();
-
-        if (!htmlText || htmlText.trim().length === 0) {
-          throw new Error("Empty response received from server");
-        }
-
-        if (isMounted) {
-          setHtmlContent(htmlText);
-        }
-      } catch (err) {
-        if (!isMounted) return;
-
-        const errorMessage =
-          err instanceof Error ? err.message : "Failed to load visualizer";
-        setError(errorMessage);
-        if (!(err instanceof Error && err.message.includes("404"))) {
-          handleError(new Error(errorMessage));
-        }
-      } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    if (fileId) {
-      fetchVisualizerContent();
-    }
-
-    return () => {
-      isMounted = false;
-    };
-  }, [fileId, error, handleError, handleFileNotFound]);
-
-  const createBlobUrl = useCallback((content: string) => {
-    const blob = new Blob([content], { type: "text/html" });
-    return URL.createObjectURL(blob);
-  }, []);
-
-  if (error) {
-    if (error === "File has been deleted") {
-      return (
-        <div className="border border-amber-200 rounded-lg p-4 bg-amber-50">
-          <div className="flex items-center text-amber-800">
-            <ExclamationTriangleIcon className="h-5 w-5 mr-2 flex-shrink-0" />
-            <div>
-              <div className="font-medium">Visualizer Removed</div>
-              <div className="text-sm text-amber-700 mt-1">
-                This visualizer has been deleted and is no longer available.
-              </div>
-            </div>
-          </div>
-        </div>
-      );
-    }
-
-    return (
-      <div className="border border-red-200 rounded-lg p-4 bg-red-50">
-        <div className="flex items-center text-red-800">
-          <ExclamationTriangleIcon className="h-5 w-5 mr-2 flex-shrink-0" />
-          <div>
-            <div className="font-medium">Unable to load visualizer</div>
-            <div className="text-sm text-red-600 mt-1">{error}</div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (isLoading) {
-    return (
-      <div
-        className="border border-gray-200 rounded-lg p-4 bg-gray-50"
-        style={{ height }}
-      >
-        <div className="flex items-center justify-center h-full">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          <span className="ml-3 text-gray-600">Loading visualizer...</span>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div
-      className="relative border border-gray-200 rounded-lg overflow-hidden"
-      style={{ height }}
-    >
-      {htmlContent && (
-        <iframe
-          src={createBlobUrl(htmlContent)}
-          title={title}
-          className="w-full h-full border-0"
-          sandbox="allow-scripts allow-same-origin allow-forms"
-          style={{ minHeight: height }}
-        />
-      )}
-    </div>
-  );
-};
+import { EmbeddedVisualizer } from "@/components/common/EmbeddedVisualizer";
 
 interface VisualizerManagerProps {
   solutionId?: string;
@@ -211,8 +25,6 @@ interface VisualizerManagerProps {
 
 export function VisualizerManager({
   solutionId,
-  visualizerFileIds,
-  onVisualizerFileIdsChange,
 }: VisualizerManagerProps) {
   const [dragActive, setDragActive] = useState(false);
   const htmlFileInputRef = useRef<HTMLInputElement>(null);
@@ -222,7 +34,9 @@ export function VisualizerManager({
   const { data: visualizerFiles, refetch: refetchVisualizers } =
     useVisualizerFilesBySolution(solutionId || "");
 
-  // Handle HTML visualizer file upload
+  // Get actual count from fetched data
+  const currentVisualizerCount = visualizerFiles?.data?.length || 0;
+
   const handleVisualizerUpload = useCallback(
     async (files: FileList | File[]) => {
       if (!solutionId) {
@@ -240,55 +54,65 @@ export function VisualizerManager({
         return;
       }
 
-      const currentVisualizerCount = visualizerFileIds.length;
       const maxVisualizers = SOLUTION_VALIDATION.MAX_VISUALIZERS_PER_SOLUTION;
 
-      if (currentVisualizerCount + htmlFiles.length > maxVisualizers) {
+      // Check limit BEFORE uploading
+      if (currentVisualizerCount >= maxVisualizers) {
         toast.error(
-          `Maximum ${maxVisualizers} HTML visualizers allowed per solution`
+          `Maximum ${maxVisualizers} HTML visualizers already uploaded. Delete existing files to add new ones.`
         );
         return;
       }
 
-      try {
-        const newFileIds: string[] = [];
-        for (const file of htmlFiles) {
-          // Validate file size
-          if (file.size > SOLUTION_VALIDATION.MAX_VISUALIZER_SIZE) {
-            toast.error(
-              `${file.name} exceeds maximum size of ${
-                SOLUTION_VALIDATION.MAX_VISUALIZER_SIZE / 1024
-              }KB`
-            );
-            continue;
-          }
+      if (currentVisualizerCount + htmlFiles.length > maxVisualizers) {
+        toast.error(
+          `Cannot upload ${htmlFiles.length} files. Maximum ${maxVisualizers} visualizers allowed. You currently have ${currentVisualizerCount}.`
+        );
+        return;
+      }
 
+      // Upload files one by one
+      let uploadedCount = 0;
+      for (const file of htmlFiles) {
+        // Check size
+        if (file.size > SOLUTION_VALIDATION.MAX_VISUALIZER_SIZE) {
+          toast.error(
+            `${file.name} exceeds maximum size of ${
+              SOLUTION_VALIDATION.MAX_VISUALIZER_SIZE / 1024
+            }KB`
+          );
+          continue;
+        }
+
+        try {
           const result = await uploadVisualizerMutation.mutateAsync({
             solutionId,
             file,
           });
+          
           if (result.fileId) {
-            newFileIds.push(result.fileId);
+            uploadedCount++;
           }
+        } catch (error) {
+          console.error(`Failed to upload ${file.name}:`, error);
+          toast.error(`Failed to upload ${file.name}`);
         }
+      }
 
-        const updatedFileIds = [...visualizerFileIds, ...newFileIds];
-        onVisualizerFileIdsChange(updatedFileIds);
-        refetchVisualizers();
-      } catch (error) {
-        console.error("Visualizer upload failed:", error);
+      if (uploadedCount > 0) {
+        // Refetch to get updated list
+        await refetchVisualizers();
+        toast.success(`Successfully uploaded ${uploadedCount} visualizer(s)`);
       }
     },
     [
       solutionId,
-      visualizerFileIds,
-      onVisualizerFileIdsChange,
+      currentVisualizerCount,
       uploadVisualizerMutation,
       refetchVisualizers,
     ]
   );
 
-  // Handle drag and drop
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -312,38 +136,40 @@ export function VisualizerManager({
     [handleVisualizerUpload]
   );
 
-  // Remove visualizer file
   const handleRemoveVisualizerFile = useCallback(
     async (fileId: string) => {
+      if (!confirm("Are you sure you want to delete this visualizer?")) {
+        return;
+      }
+
       try {
-        const updatedFileIds = visualizerFileIds.filter((id) => id !== fileId);
-        onVisualizerFileIdsChange(updatedFileIds);
-
         await deleteVisualizerMutation.mutateAsync(fileId);
-
-        refetchVisualizers();
+        
+        // Refetch to get updated list
+        await refetchVisualizers();
       } catch (error) {
         console.error("Failed to remove visualizer:", error);
-        onVisualizerFileIdsChange(visualizerFileIds);
       }
     },
-    [
-      visualizerFileIds,
-      onVisualizerFileIdsChange,
-      deleteVisualizerMutation,
-      refetchVisualizers,
-    ]
+    [deleteVisualizerMutation, refetchVisualizers]
   );
 
   const handleVisualizerFileNotFound = useCallback(
-    (fileId: string) => {
-      const updatedFileIds = visualizerFileIds.filter((id) => id !== fileId);
-      if (updatedFileIds.length !== visualizerFileIds.length) {
-        onVisualizerFileIdsChange(updatedFileIds);
-      }
+    async () => {
+      // File was deleted, refetch the list
+      await refetchVisualizers();
     },
-    [visualizerFileIds, onVisualizerFileIdsChange]
+    [refetchVisualizers]
   );
+
+  // Clear file input after selection
+  const handleFileInputChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      await handleVisualizerUpload(e.target.files);
+      // Clear the input
+      e.target.value = "";
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -357,15 +183,17 @@ export function VisualizerManager({
           embedded and displayed within our website.
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center">
           <button
             type="button"
             onClick={() => htmlFileInputRef.current?.click()}
-            disabled={visualizerFileIds.length >= 2 || !solutionId}
+            disabled={currentVisualizerCount >= 2 || !solutionId}
             className="inline-flex items-center px-3 py-2 border border-gray-300 rounded text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
             title={
               !solutionId
                 ? "Save solution first to upload visualizers"
+                : currentVisualizerCount >= 2
+                ? "Maximum 2 visualizers already uploaded"
                 : "Upload HTML visualizer"
             }
           >
@@ -378,10 +206,15 @@ export function VisualizerManager({
               Save solution first to upload visualizers
             </div>
           )}
+
+          {solutionId && currentVisualizerCount >= 2 && (
+            <div className="text-sm text-orange-600 px-3 py-2 bg-orange-50 border border-orange-200 rounded">
+              Maximum limit reached (2/2)
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Visualizer Files List */}
       {visualizerFiles?.data && visualizerFiles.data.length > 0 && (
         <div className="space-y-6">
           <h4 className="text-sm font-medium text-gray-700">
@@ -392,7 +225,6 @@ export function VisualizerManager({
               key={file.fileId}
               className="border border-gray-200 rounded-lg overflow-hidden"
             >
-              {/* File Info Header */}
               <div className="flex items-center justify-between p-3 bg-gray-50 border-b border-gray-200">
                 <div className="flex items-center space-x-3">
                   <CubeTransparentIcon className="h-6 w-6 text-blue-600" />
@@ -407,7 +239,7 @@ export function VisualizerManager({
                   </div>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <a // ❌ BROKEN - missing href and other attributes
+                  <a
                     href={adminSolutionsService.getVisualizerFileUrl(
                       file.fileId
                     )}
@@ -422,7 +254,8 @@ export function VisualizerManager({
                   <button
                     type="button"
                     onClick={() => handleRemoveVisualizerFile(file.fileId)}
-                    className="inline-flex items-center px-2 py-1 border border-red-300 rounded text-xs font-medium text-red-700 bg-white hover:bg-red-50"
+                    disabled={deleteVisualizerMutation.isPending}
+                    className="inline-flex items-center px-2 py-1 border border-red-300 rounded text-xs font-medium text-red-700 bg-white hover:bg-red-50 disabled:opacity-50"
                     title="Delete visualizer"
                   >
                     <TrashIcon className="h-3 w-3 mr-1" />
@@ -431,7 +264,6 @@ export function VisualizerManager({
                 </div>
               </div>
 
-              {/* Embedded Preview */}
               <div className="p-0">
                 <EmbeddedVisualizer
                   fileId={file.fileId}
@@ -448,11 +280,10 @@ export function VisualizerManager({
         </div>
       )}
 
-      {/* Drag and Drop Zone for HTML files */}
       <div
         className={`mt-4 border-2 border-dashed rounded-lg p-6 text-center ${
           dragActive ? "border-blue-400 bg-blue-50" : "border-gray-300"
-        } ${visualizerFileIds.length >= 2 ? "opacity-50" : ""}`}
+        } ${currentVisualizerCount >= 2 ? "opacity-50" : ""}`}
         onDragEnter={handleDrag}
         onDragLeave={handleDrag}
         onDragOver={handleDrag}
@@ -460,7 +291,7 @@ export function VisualizerManager({
       >
         <CubeTransparentIcon className="mx-auto h-8 w-8 text-gray-400" />
         <p className="mt-2 text-sm text-gray-600">
-          {visualizerFileIds.length >= 2
+          {currentVisualizerCount >= 2
             ? "Maximum 2 visualizers reached"
             : "Drag and drop HTML files here, or click upload button"}
         </p>
@@ -469,18 +300,13 @@ export function VisualizerManager({
         </p>
       </div>
 
-      {/* Hidden file input */}
       <input
         ref={htmlFileInputRef}
         type="file"
         multiple
         accept=".html"
         className="hidden"
-        onChange={(e) => {
-          if (e.target.files) {
-            handleVisualizerUpload(e.target.files);
-          }
-        }}
+        onChange={handleFileInputChange}
       />
     </div>
   );

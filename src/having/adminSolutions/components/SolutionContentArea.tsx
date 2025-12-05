@@ -1,22 +1,19 @@
 // src/having/adminSolutions/components/SolutionContentArea.tsx
-// Middle area with toggle between Editor and Visualizers
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Editor } from "@tiptap/react";
-import { FileText} from "lucide-react";
+import { FileText } from "lucide-react";
 import { SolutionEditor } from "./SolutionEditor";
 import { CubeTransparentIcon } from "@heroicons/react/24/outline";
 import { VisualizerManager } from "./VisualizerManager";
+import { useVisualizerFilesBySolution } from "../hooks";
 
 interface SolutionContentAreaProps {
-  // Editor props
   content: string;
   onContentChange: (content: string) => void;
   onEditorReady?: (editor: Editor) => void;
-  
-  // Visualizer props
   solutionId?: string;
   visualizerFileIds: string[];
   onVisualizerFileIdsChange: (fileIds: string[]) => void;
@@ -31,10 +28,23 @@ export function SolutionContentArea({
   onVisualizerFileIdsChange,
 }: SolutionContentAreaProps) {
   const [activeView, setActiveView] = useState<"editor" | "visualizers">("editor");
+  
+  // Fetch actual visualizers to get correct count
+  const { data: visualizerFiles } = useVisualizerFilesBySolution(solutionId || "");
+  const actualVisualizerCount = visualizerFiles?.data?.length || 0;
+
+  // Sync visualizerFileIds with actual uploaded files
+  useEffect(() => {
+    if (visualizerFiles?.data && solutionId) {
+      const fileIds = visualizerFiles.data.map(file => file.fileId);
+      if (JSON.stringify(fileIds) !== JSON.stringify(visualizerFileIds)) {
+        onVisualizerFileIdsChange(fileIds);
+      }
+    }
+  }, [visualizerFiles, solutionId, visualizerFileIds, onVisualizerFileIdsChange]);
 
   return (
     <div className="flex-1 flex flex-col">
-      {/* Toggle Buttons */}
       <div className="bg-gray-50 border-b border-gray-200 px-4 py-2">
         <div className="flex space-x-2">
           <button
@@ -59,12 +69,11 @@ export function SolutionContentArea({
             }`}
           >
             <CubeTransparentIcon className="w-4 h-4" />
-            Visualizers ({visualizerFileIds.length}/2)
+            Visualizers ({actualVisualizerCount}/2)
           </button>
         </div>
       </div>
 
-      {/* Content Area */}
       <div className="flex-1 overflow-y-auto p-4">
         {activeView === "editor" ? (
           <SolutionEditor
