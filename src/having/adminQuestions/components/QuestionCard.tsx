@@ -33,6 +33,10 @@ export function QuestionCard({ question }: QuestionCardProps) {
     router.push(`${ADMIN_ROUTES.QUESTIONS}/${question.id}/edit`);
   };
 
+  const handleTitleClick = () => {
+    router.push(`/questions/${question.id}`);
+  };
+
   return (
     <>
       <div className="bg-white shadow rounded-lg border border-gray-200 hover:shadow-lg transition-shadow">
@@ -40,7 +44,11 @@ export function QuestionCard({ question }: QuestionCardProps) {
           {/* Header */}
           <div className="flex items-start justify-between">
             <div className="flex-1 min-w-0">
-              <h3 className="text-lg font-semibold text-gray-900 truncate">
+              <h3 
+                onClick={handleTitleClick}
+                className="text-lg font-semibold text-gray-900 truncate cursor-pointer hover:text-blue-600 transition-colors"
+                title="View question"
+              >
                 {question.title}
               </h3>
               <div className="mt-2 flex items-center space-x-2 flex-wrap gap-2">

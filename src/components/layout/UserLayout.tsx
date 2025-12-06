@@ -265,12 +265,28 @@ export default function UserLayout({ children }: UserLayoutProps) {
         <div className={`${isCollapsed && !isMobile ? 'flex flex-col items-center space-y-2 px-1' : 'flex items-center justify-between px-4'} py-4 border-b border-gray-200 dark:border-gray-700`}>
           {(!isCollapsed || isMobile) && (
             <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-                <Code size={18} className="text-white" />
-              </div>
+              <Image 
+                src="/logo.jpg" 
+                alt="AlgoArena Logo" 
+                width={32}
+                height={32}
+                className="rounded-lg object-cover"
+              />
               <h1 className="text-xl font-bold text-gray-900 dark:text-white">
                 AlgoArena
               </h1>
+            </div>
+          )}
+          
+          {isCollapsed && !isMobile && (
+            <div className="flex items-center justify-center w-full mb-2">
+              <Image 
+                src="/logo.jpg" 
+                alt="AlgoArena Logo" 
+                width={32}
+                height={32}
+                className="rounded-lg object-cover"
+              />
             </div>
           )}
           
